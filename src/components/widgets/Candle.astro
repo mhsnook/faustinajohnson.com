@@ -1,0 +1,62 @@
+---
+interface Props {
+	caption?: string;
+}
+
+const { caption = "" } = Astro.props;
+---
+
+<div class="candle">
+	<div class="candle__halo"></div>
+	<div class="candle__flame"></div>
+	<div class="candle__wax"></div>
+</div>
+{caption && <p class="candle__caption">{caption}</p>}
+
+<style>
+	.candle {
+		position: relative;
+		height: 96px;
+		display: flex;
+		align-items: flex-end;
+		justify-content: center;
+	}
+
+	.candle__halo {
+		position: absolute;
+		bottom: 26px;
+		width: 120px;
+		height: 120px;
+		background: radial-gradient(closest-side, rgba(255, 180, 88, 0.34), rgba(255, 150, 50, 0) 70%);
+		animation: breathe 4.2s ease-in-out infinite;
+	}
+
+	.candle__flame {
+		position: relative;
+		width: 9px;
+		height: 14px;
+		margin-bottom: 2px;
+		border-radius: 50% 50% 45% 45%;
+		background: linear-gradient(#fff4d4, #ff9a2e 62%, #c33d16);
+		box-shadow: 0 0 10px #ff9c34;
+		animation: flick 3.4s ease-in-out infinite;
+	}
+
+	.candle__wax {
+		position: absolute;
+		bottom: 0;
+		width: 26px;
+		height: 44px;
+		background: linear-gradient(90deg, #2a221c, #5a4a3c 38%, #3a2f26 72%, #221b16);
+		border-top: 2px solid #6b5847;
+	}
+
+	.candle__caption {
+		margin: 8px 0 0;
+		font-size: 14px;
+		font-style: italic;
+		line-height: 1.4;
+		color: #8d7d6a;
+		text-align: center;
+	}
+</style>

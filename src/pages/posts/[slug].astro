@@ -1,6 +1,8 @@
 ---
-import { getEmDashEntry, getSeoMeta, decodeSlug, getSiteSettings } from "emdash";
-import { Image, PortableText, WidgetArea } from "emdash/ui";
+import { decodeSlug, getEmDashEntry, getSeoMeta, getSiteSettings } from "emdash";
+import { PortableText } from "emdash/ui";
+import { formatLongDate } from "../../utils/dates";
+import Frame from "../../components/Frame.astro";
 import Base from "../../layouts/Base.astro";
 import { resolveStarterSiteIdentity } from "../../utils/site-identity";
 
@@ -19,7 +21,6 @@ if (!post) {
 if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
 const { siteTitle } = resolveStarterSiteIdentity(await getSiteSettings());
 
-// SEO meta from content fields
 const seo = getSeoMeta(post, {
 	siteTitle,
 	siteUrl: Astro.url.origin,
@@ -38,54 +39,91 @@ const categories = post.data.terms?.category ?? [];
 	canonical={seo.canonical}
 	image={seo.ogImage}
 	content={{ collection: "posts", id: post.data.id, slug }}
+	heroTitle={post.data.title}
+	heroKicker={post.data.kicker ?? "a piece"}
 >
-	<article>
+	<article class="panel">
 		{
 			post.data.featured_image && (
 				<div {...post.edit.featured_image}>
-					<Image image={post.data.featured_image} />
+					<Frame image={post.data.featured_image} ratio="16/9" />
 				</div>
 			)
 		}
 
-		<h1 {...post.edit.title}>{post.data.title}</h1>
+		<div class="piece-page__meta">
+			{
+				post.data.published_on && (
+					<time datetime={post.data.published_on}>{formatLongDate(post.data.published_on)}</time>
+				)
+			}
+			{
+				categories.map((category) => (
+					<a href={`/category/${category.slug}`}>{category.label}</a>
+				))
+			}
+		</div>
 
-		{
-			post.data.publishedAt && (
-				<time datetime={post.data.publishedAt.toISOString()}>
-					{post.data.publishedAt.toLocaleDateString("en-US", {
-						year: "numeric",
-						month: "long",
-						day: "numeric",
-					})}
-				</time>
-			)
-		}
+		<h1 class="piece-page__title" {...post.edit.title}>{post.data.title}</h1>
 
-		{
-			categories.length > 0 && (
-				<div>
-					{categories.map((c) => (
-						<a href={`/category/${c.slug}`}>{c.label}</a>
-					))}
-				</div>
-			)
-		}
+		{post.data.excerpt && <p class="lede piece-page__lede">{post.data.excerpt}</p>}
 
-		<PortableText value={post.data.content} />
+		<div class="prose">
+			<PortableText value={post.data.content} />
+		</div>
 
 		{
 			tags.length > 0 && (
-				<div>
-					{tags.map((t) => (
-						<a href={`/tag/${t.slug}`}>{t.label}</a>
+				<div class="tags piece-page__tags">
+					{tags.map((tag) => (
+						<a href={`/tag/${tag.slug}`}>{tag.label}</a>
 					))}
 				</div>
 			)
 		}
 	</article>
-
-	<aside>
-		<WidgetArea name="sidebar" />
-	</aside>
 </Base>
+
+<style>
+	.piece-page__meta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 14px;
+		margin-top: 18px;
+		font-family: var(--font-mono);
+		font-size: 10px;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--flame);
+	}
+
+	.piece-page__meta a {
+		color: var(--ember);
+	}
+
+	.piece-page__meta a:hover {
+		color: var(--gold-hover);
+	}
+
+	.piece-page__title {
+		margin: 10px 0 0;
+		font-family: var(--font-display);
+		font-size: clamp(30px, 5vw, 40px);
+		line-height: 1.08;
+		font-weight: 400;
+		color: var(--parchment);
+	}
+
+	.piece-page__lede {
+		margin: 14px 0 22px;
+		padding-bottom: 22px;
+		border-bottom: 1px solid var(--hairline);
+	}
+
+	.piece-page__tags {
+		margin-top: 28px;
+		padding-top: 18px;
+		border-top: 1px solid var(--hairline);
+	}
+</style>

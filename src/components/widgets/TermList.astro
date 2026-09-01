@@ -1,0 +1,41 @@
+---
+import { getTaxonomyTerms } from "emdash";
+
+interface Props {
+	taxonomy: "category" | "tag";
+	limit?: number;
+}
+
+const { taxonomy, limit } = Astro.props;
+
+const terms = await getTaxonomyTerms(taxonomy);
+const shown = limit ? terms.slice(0, limit) : terms;
+const base = taxonomy === "category" ? "/category" : "/tag";
+---
+
+<div class="terms">
+	{shown.map((term) => <a href={`${base}/${term.slug}`}>{term.label}</a>)}
+</div>
+
+<style>
+	.terms {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+
+	.terms a {
+		font-family: var(--font-mono);
+		font-size: 10.5px;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: #8f8070;
+		padding: 4px 8px;
+		border: 1px solid #2a221c;
+	}
+
+	.terms a:hover {
+		color: var(--gold-hover);
+		border-color: var(--bevel-hot);
+	}
+</style>

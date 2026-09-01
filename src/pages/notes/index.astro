@@ -1,0 +1,25 @@
+---
+import { getEmDashCollection } from "emdash";
+import NoteList from "../../components/NoteList.astro";
+import SectionHead from "../../components/SectionHead.astro";
+import Base from "../../layouts/Base.astro";
+
+const { entries: notes, cacheHint } = await getEmDashCollection("notes", {
+	status: "published",
+	orderBy: { note_date: "desc" },
+});
+if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
+---
+
+<Base title="Field Notes" heroTitle="Field Notes" heroKicker="updated weekly">
+	<section class="panel">
+		<SectionHead title="Every Note" meta={`${notes.length} in total`} rule="dim" />
+		{
+			notes.length === 0 ? (
+				<p class="empty">No notes yet.</p>
+			) : (
+				<NoteList notes={notes} />
+			)
+		}
+	</section>
+</Base>

@@ -1,0 +1,56 @@
+---
+import { getEmDashCollection } from "emdash";
+import { formatLongDate } from "../../utils/dates";
+
+interface Props {
+	count?: number;
+	showDate?: boolean;
+}
+
+const { count = 5, showDate = true } = Astro.props;
+
+const { entries, cacheHint } = await getEmDashCollection("posts", {
+	status: "published",
+	limit: count,
+	orderBy: { published_on: "desc" },
+});
+if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
+---
+
+<ul class="rp">
+	{
+		entries.map((entry) => (
+			<li>
+				<a href={`/posts/${entry.id}`}>{entry.data.title}</a>
+				{showDate && entry.data.published_on && (
+					<time datetime={entry.data.published_on}>{formatLongDate(entry.data.published_on)}</time>
+				)}
+			</li>
+		))
+	}
+</ul>
+
+<style>
+	.rp {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 9px;
+	}
+
+	.rp a {
+		font-size: 15.5px;
+		line-height: 1.35;
+		color: var(--linen);
+	}
+
+	.rp time {
+		display: block;
+		font-family: var(--font-mono);
+		font-size: 10px;
+		color: var(--muted);
+		margin-top: 2px;
+	}
+</style>

@@ -1,48 +1,288 @@
 ---
-import { getEmDashCollection, getSiteSettings } from "emdash";
-import { Image } from "emdash/ui";
+import { getEmDashCollection, getEmDashEntry, getMenu, getSiteSettings } from "emdash";
+import { PortableText } from "emdash/ui";
+import Frame from "../components/Frame.astro";
+import NoteList from "../components/NoteList.astro";
+import PieceCard from "../components/PieceCard.astro";
+import SectionHead from "../components/SectionHead.astro";
 import Base from "../layouts/Base.astro";
-import { resolveStarterSiteIdentity } from "../utils/site-identity";
+import { AUTHOR_PORTRAIT, resolveStarterSiteIdentity } from "../utils/site-identity";
 
-const { entries: posts, cacheHint } = await getEmDashCollection("posts", {
-	orderBy: { published_at: "desc" },
-});
-const { siteTitle, siteTagline } = resolveStarterSiteIdentity(await getSiteSettings());
-if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
+// Nothing here depends on anything else here, so it all goes out at once
+// rather than as eight serial round trips before the first byte.
+const [
+	settings,
+	{ entry: bio, cacheHint: bioHint },
+	{ entry: method, cacheHint: methodHint },
+	{ entry: letter, cacheHint: letterHint },
+	{ entries: pieces, cacheHint: piecesHint },
+	{ entries: tenets, cacheHint: tenetsHint },
+	{ entries: notes, cacheHint: notesHint },
+	letterMenu,
+] = await Promise.all([
+	getSiteSettings(),
+	getEmDashEntry("pages", "about"),
+	getEmDashEntry("pages", "method"),
+	getEmDashEntry("pages", "correspondence"),
+	getEmDashCollection("posts", {
+		status: "published",
+		limit: 4,
+		orderBy: { published_on: "desc" },
+	}),
+	getEmDashCollection("tenets", { status: "published", orderBy: { sort_order: "asc" } }),
+	getEmDashCollection("notes", {
+		status: "published",
+		limit: 4,
+		orderBy: { note_date: "desc" },
+	}),
+	getMenu("correspondence"),
+]);
+
+const { siteTitle, siteTagline } = resolveStarterSiteIdentity(settings);
+
+if (Astro.cache?.enabled) {
+	for (const hint of [bioHint, methodHint, letterHint, piecesHint, tenetsHint, notesHint]) {
+		Astro.cache.set(hint);
+	}
+}
+
+const COUNT_WORDS = ["No", "One", "Two", "Three", "Four"];
+const workHeading = `${COUNT_WORDS[pieces.length]} ${pieces.length === 1 ? "Piece" : "Pieces"}`;
+
+const years = pieces
+	.map((piece) => new Date(piece.data.published_on).getFullYear())
+	.filter((year) => !Number.isNaN(year));
+const [firstYear, lastYear] = [Math.min(...years), Math.max(...years)];
+const yearRange =
+	years.length === 0 ? null : firstYear === lastYear ? `${firstYear}` : `${firstYear} — ${lastYear}`;
 ---
 
-<Base title={siteTitle} description={siteTagline}>
-	<h1>Recent Posts</h1>
-
+<Base
+	title={siteTitle}
+	description={siteTagline}
+	hero="full"
+	heroTitle={siteTitle}
+	heroLede={siteTagline}
+>
+	{/* ---------- Bio ---------- */}
 	{
-		posts.length === 0 ? (
-			<p>
-				No posts yet.{" "}
-				<a href="/_emdash/admin/content/posts/new">Create one</a>.
-			</p>
-		) : (
-			<ul>
-				{posts.map((post) => (
-					<li>
-						<a href={`/posts/${post.id}`}>
-							{post.data.featured_image && (
-								<Image image={post.data.featured_image} />
-							)}
-							<h2>{post.data.title}</h2>
-						</a>
-						{post.data.excerpt && <p>{post.data.excerpt}</p>}
-						{post.data.publishedAt && (
-							<time datetime={post.data.publishedAt.toISOString()}>
-								{post.data.publishedAt.toLocaleDateString("en-US", {
-									year: "numeric",
-									month: "long",
-									day: "numeric",
-								})}
-							</time>
-						)}
-					</li>
-				))}
-			</ul>
+		bio && (
+			<section class="panel bio" id="bio">
+				<div class="portrait-grid">
+					<Frame
+						image={bio.data.portrait ?? AUTHOR_PORTRAIT}
+						ratio="4/5"
+						label={"portrait\nlamplight, 3/4"}
+					/>
+					<div>
+						<h2 class="bio__title" {...bio.edit.title}>
+							{bio.data.title}
+						</h2>
+						{bio.data.kicker && <div class="kicker bio__kicker">{bio.data.kicker}</div>}
+						<div class="prose">
+							<PortableText value={bio.data.content} />
+						</div>
+					</div>
+				</div>
+			</section>
+		)
+	}
+
+	{/* ---------- The Work ---------- */}
+	<section id="work">
+		<SectionHead title={workHeading} meta={yearRange} />
+		{
+			pieces.length === 0 ? (
+				<p class="empty">
+					Nothing published yet.{" "}
+					<a href="/_emdash/admin/content/posts/new">Write the first piece</a>.
+				</p>
+			) : (
+				<div class="list">
+					{pieces.map((piece, index) => (
+						<PieceCard
+							href={`/posts/${piece.id}`}
+							title={piece.data.title}
+							kicker={piece.data.kicker}
+							excerpt={piece.data.excerpt}
+							image={piece.data.featured_image}
+							flip={index % 2 === 1}
+						/>
+					))}
+				</div>
+			)
+		}
+	</section>
+
+	{/* ---------- Method ---------- */}
+	{
+		(method || tenets.length > 0) && (
+			<section class="panel panel--glow" id="method">
+				<div class="method__head">
+					{method?.data.kicker && (
+						<div class="kicker kicker--flame kicker--wide">{method.data.kicker}</div>
+					)}
+					<h2 class="method__title">{method?.data.title ?? "Method"}</h2>
+				</div>
+
+				{tenets.length > 0 && (
+					<div class="method__grid">
+						{tenets.map((tenet) => (
+							<article class="panel panel--sunk tenet">
+								{tenet.data.numeral && <div class="tenet__numeral">{tenet.data.numeral}</div>}
+								<h3 class="tenet__title">{tenet.data.title}</h3>
+								{tenet.data.body && <p class="tenet__body">{tenet.data.body}</p>}
+							</article>
+						))}
+					</div>
+				)}
+
+				{method?.data.content && (
+					<div class="method__quote">
+						<PortableText value={method.data.content} />
+					</div>
+				)}
+			</section>
+		)
+	}
+
+	{/* ---------- Field Notes ---------- */}
+	{
+		notes.length > 0 && (
+			<section class="panel" id="notes">
+				<SectionHead title="Field Notes" meta="updated weekly" metaHref="/notes" rule="dim" />
+				<NoteList notes={notes} />
+			</section>
+		)
+	}
+
+	{/* ---------- Correspondence ---------- */}
+	{
+		letter && (
+			<section class="panel panel--hearth" id="correspondence">
+				<div class="glow glow--hearth" aria-hidden="true" />
+				<div class="hearth__inner">
+					<h2 class="hearth__title">{letter.data.title}</h2>
+					<div class="hearth__body">
+						<PortableText value={letter.data.content} />
+					</div>
+					{letterMenu && letterMenu.items.length > 0 && (
+						<div class="hearth__actions">
+							{letterMenu.items.map((item, index) => (
+								<a
+									class:list={["btn", index === 0 && "btn--ember"]}
+									href={item.url}
+									target={item.target}
+								>
+									{item.label}
+								</a>
+							))}
+						</div>
+					)}
+				</div>
+			</section>
 		)
 	}
 </Base>
+
+<style>
+	section[id] {
+		scroll-margin-top: 16px;
+	}
+
+	/* ---------- Bio ---------- */
+
+	.bio__title {
+		margin: 0 0 4px;
+		font-family: var(--font-display);
+		font-size: 27px;
+		font-weight: 400;
+		color: var(--parchment-2);
+		text-shadow: 0 0 14px rgba(255, 160, 70, 0.28);
+	}
+
+	.bio__kicker {
+		margin-bottom: 12px;
+	}
+
+	/* The design steps the closing paragraph back a shade from the opening one. */
+	.bio :global(.prose p:last-child) {
+		color: var(--body-2);
+	}
+
+	/* ---------- The Work ---------- */
+
+	/* ---------- Method ---------- */
+
+	.method__head {
+		text-align: center;
+		margin-bottom: 24px;
+	}
+
+	.method__title {
+		margin: 8px 0 0;
+		font-family: var(--font-display);
+		font-size: 33px;
+		font-weight: 400;
+		color: var(--parchment);
+		text-shadow: 0 0 18px rgba(255, 160, 70, 0.35);
+	}
+
+	.method__grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+		gap: 16px;
+	}
+
+	.tenet {
+		padding: 16px;
+		background: linear-gradient(var(--well-top), var(--ink-2));
+		box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.85);
+	}
+
+	.tenet__numeral {
+		font-family: var(--font-display);
+		font-size: 22px;
+		color: var(--ember-bright);
+		margin-bottom: 6px;
+	}
+
+	.tenet__title {
+		margin: 0 0 8px;
+		font-family: var(--font-display);
+		font-size: 19px;
+		font-weight: 400;
+		color: var(--parchment-3);
+	}
+
+	.tenet__body {
+		margin: 0;
+		font-size: 16px;
+		line-height: 1.55;
+		color: var(--body-3);
+		text-wrap: pretty;
+	}
+
+	.method__quote {
+		margin: 22px auto 0;
+		max-width: 620px;
+		text-align: center;
+	}
+
+	.method__quote :global(blockquote) {
+		margin: 0;
+		padding: 0;
+		border: 0;
+		font-size: 18px;
+		line-height: 1.6;
+		font-style: italic;
+		color: #b7a68c;
+		text-wrap: pretty;
+	}
+
+	.method__quote :global(blockquote p) {
+		margin: 0;
+	}
+
+
+</style>

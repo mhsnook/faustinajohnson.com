@@ -2,8 +2,18 @@
 import Base from "../layouts/Base.astro";
 ---
 
-<Base title="Not Found">
-	<h1>Page not found</h1>
-	<p>The page you're looking for doesn't exist.</p>
-	<a href="/">Go home</a>
+<Base title="Not Found" heroTitle="404" heroKicker="the room is empty">
+	<section class="panel panel--hearth">
+		<div class="glow glow--hearth" aria-hidden="true"></div>
+		<div class="hearth__inner">
+			<h1 class="hearth__title">Nothing at this address</h1>
+			<p class="hearth__body">
+				The page moved, or it was never here. The work is all still on the shelf.
+			</p>
+			<div class="hearth__actions">
+				<a class="btn btn--ember" href="/">back to the front</a>
+				<a class="btn" href="/posts">the work</a>
+			</div>
+		</div>
+	</section>
 </Base>

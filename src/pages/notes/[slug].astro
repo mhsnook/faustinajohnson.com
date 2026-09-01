@@ -1,0 +1,76 @@
+---
+import { decodeSlug, getEmDashEntry, getSeoMeta, getSiteSettings } from "emdash";
+import { PortableText } from "emdash/ui";
+import Base from "../../layouts/Base.astro";
+import { formatNoteDate } from "../../utils/dates";
+import { resolveStarterSiteIdentity } from "../../utils/site-identity";
+
+const slug = decodeSlug(Astro.params.slug);
+
+if (!slug) {
+	return Astro.redirect("/404");
+}
+
+const { entry: note, cacheHint } = await getEmDashEntry("notes", slug);
+
+if (!note) {
+	return Astro.redirect("/404");
+}
+
+if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
+const { siteTitle } = resolveStarterSiteIdentity(await getSiteSettings());
+
+const seo = getSeoMeta(note, {
+	siteTitle,
+	siteUrl: Astro.url.origin,
+	path: `/notes/${slug}`,
+});
+
+const dateline = formatNoteDate(note.data.note_date);
+---
+
+<Base
+	title={seo.title}
+	pageTitle={seo.ogTitle}
+	description={seo.description}
+	canonical={seo.canonical}
+	content={{ collection: "notes", id: note.data.id, slug }}
+	heroTitle="Field Notes"
+	heroKicker={dateline}
+>
+	<article class="panel">
+		{dateline && <div class="kicker kicker--flame">{dateline}</div>}
+		<h1 class="note-page__title" {...note.edit.title}>{note.data.title}</h1>
+		<div class="prose">
+			<PortableText value={note.data.content} />
+		</div>
+		<a class="note-page__back" href="/notes">← all field notes</a>
+	</article>
+</Base>
+
+<style>
+	.note-page__title {
+		margin: 8px 0 20px;
+		font-family: var(--font-display);
+		font-size: clamp(26px, 4.4vw, 34px);
+		line-height: 1.12;
+		font-weight: 400;
+		color: var(--parchment);
+	}
+
+	.note-page__back {
+		display: inline-block;
+		margin-top: 26px;
+		padding-top: 18px;
+		border-top: 1px solid var(--hairline);
+		font-family: var(--font-mono);
+		font-size: 10px;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: var(--muted-2);
+	}
+
+	.note-page__back:hover {
+		color: var(--gold-hover);
+	}
+</style>

@@ -1,0 +1,26 @@
+---
+import type { MediaValue } from "emdash";
+import { Image } from "emdash/ui";
+
+interface Props {
+	image?: MediaValue | null;
+	/** Placeholder caption shown when no image is set. Newlines become line breaks. */
+	label?: string;
+	ratio?: string;
+	class?: string;
+}
+
+const { image, label = "", ratio = "4/3", class: className } = Astro.props;
+---
+
+<div class:list={["frame", className]}>
+	{
+		image ? (
+			<Image image={image} />
+		) : (
+			<div class="frame__empty" style={`aspect-ratio:${ratio}`}>
+				<span class="frame__label">{label}</span>
+			</div>
+		)
+	}
+</div>

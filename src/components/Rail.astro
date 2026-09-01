@@ -1,0 +1,31 @@
+---
+import { getWidgetArea } from "emdash";
+import WidgetRenderer from "./WidgetRenderer.astro";
+
+interface Props {
+	/** Widget area name, e.g. "rail" or "rail-left". */
+	name: string;
+}
+
+const { name } = Astro.props;
+const area = await getWidgetArea(name);
+const widgets = area?.widgets ?? [];
+---
+
+{
+	widgets.length > 0 && (
+		<div class="rail">
+			{widgets.map((widget) => (
+				<WidgetRenderer widget={widget} />
+			))}
+		</div>
+	)
+}
+
+<style>
+	.rail {
+		display: flex;
+		flex-direction: column;
+		gap: 18px;
+	}
+</style>

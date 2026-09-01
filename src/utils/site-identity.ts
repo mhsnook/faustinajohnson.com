@@ -9,7 +9,6 @@ export interface StarterSiteIdentitySettings {
 	title?: string;
 	tagline?: string;
 	logo?: MediaReference;
-	favicon?: MediaReference;
 }
 
 const DEFAULT_SITE_TITLE = "My Site";
@@ -22,3 +21,14 @@ export function resolveStarterSiteIdentity(settings?: StarterSiteIdentitySetting
 		siteLogo: settings?.logo?.url ? settings.logo : null,
 	};
 }
+
+/** Author portrait. EmDash seeds can only carry media by URL, so this ships as a
+ *  file in public/. A portrait uploaded to the About page in the admin wins. */
+export const AUTHOR_PORTRAIT = {
+	provider: "external",
+	id: "portrait-faustina-johnson",
+	src: "/faustina-johnson.png",
+	alt: "Faustina Johnson",
+	width: 766,
+	height: 808,
+} as const;

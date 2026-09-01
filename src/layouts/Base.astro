@@ -1,14 +1,12 @@
 ---
-import { getMenu, getSiteSettings } from "emdash";
-import {
-	WidgetArea,
-	EmDashHead,
-	EmDashBodyStart,
-	EmDashBodyEnd,
-} from "emdash/ui";
+import { Font } from "astro:assets";
+import { getMenu, getSiteSettings, getWidgetArea } from "emdash";
 import { createPublicPageContext } from "emdash/page";
-import LiveSearch from "emdash/ui/search";
+import { EmDashBodyEnd, EmDashBodyStart, EmDashHead } from "emdash/ui";
+import Marquee from "../components/Marquee.astro";
+import Rail from "../components/Rail.astro";
 import { resolveStarterSiteIdentity } from "../utils/site-identity";
+import "../styles/theme.css";
 
 interface Props {
 	title: string;
@@ -18,14 +16,43 @@ interface Props {
 	canonical?: string | null;
 	/** Pass content reference for plugin page contributions on content pages */
 	content?: { collection: string; id: string; slug?: string | null };
+	/** "full" is the home masthead; "compact" is the inner-page variant. */
+	hero?: "full" | "compact";
+	heroTitle?: string | null;
+	heroKicker?: string | null;
+	heroLede?: string | null;
 }
 
-const { title, pageTitle, description, image, canonical, content } = Astro.props;
-const { siteTitle, siteTagline, siteLogo } = resolveStarterSiteIdentity(await getSiteSettings());
+const {
+	title,
+	pageTitle,
+	description,
+	image,
+	canonical,
+	content,
+	hero = "compact",
+	heroTitle,
+	heroKicker,
+	heroLede,
+} = Astro.props;
+
+// One batch instead of a chain. The three widget areas are warmed here on
+// purpose: getWidgetArea is request-cached, and the right rail renders after
+// <slot />, so without this its query cannot start until the main column is done.
+const [settings, menu] = await Promise.all([
+	getSiteSettings(),
+	getMenu("primary"),
+	getWidgetArea("marquee"),
+	getWidgetArea("rail-left"),
+	getWidgetArea("rail"),
+]);
+
+const { siteTitle, siteTagline, siteLogo } = resolveStarterSiteIdentity(settings);
 const fullTitle = title.includes(siteTitle) ? title : `${title} — ${siteTitle}`;
 const pageDescription = description ?? siteTagline;
 
-const menu = await getMenu("primary");
+const mastheadTitle = heroTitle ?? title;
+const mastheadKicker = heroKicker ?? "long form · field research · cultural context";
 
 const pageCtx = createPublicPageContext({
 	Astro,
@@ -49,38 +76,288 @@ const pageCtx = createPublicPageContext({
 		<title>{fullTitle}</title>
 		{pageDescription && <meta name="description" content={pageDescription} />}
 		{canonical && <link rel="canonical" href={canonical} />}
+		<Font cssVariable="--font-display" preload />
+		<Font cssVariable="--font-body" preload />
 		<EmDashHead page={pageCtx} />
 	</head>
 	<body>
 		<EmDashBodyStart page={pageCtx} />
 
-		<header>
-			<nav>
-				<a href="/">
-					{siteLogo
-						? <img src={siteLogo.url} alt={siteLogo.alt || siteTitle} style="height:48px;width:auto;margin:-8px 0;display:block;" />
-						: siteTitle
-					}
-				</a>
+		<div class="topbar">
+			<span class="topbar__mark">✦ enter quietly</span>
+			<Marquee />
+			<a class="topbar__link" href="/#correspondence">write to me →</a>
+		</div>
+
+		<header class:list={["masthead", hero === "compact" && "masthead--compact"]}>
+			<div class="masthead__slats" aria-hidden="true"></div>
+			<div class="glow masthead__glow" aria-hidden="true"></div>
+			<div class="masthead__inner">
+				<div class="kicker kicker--flame kicker--wide masthead__kicker">
+					{mastheadKicker}
+				</div>
 				{
-					menu?.items.map((item) => (
-						<a href={item.url} target={item.target}>
-							{item.label}
+					siteLogo && hero === "full" ? (
+						<a href="/" class="masthead__logo">
+							<img src={siteLogo.url} alt={siteLogo.alt || siteTitle} />
 						</a>
-					))
+					) : (
+						<h1 class="masthead__title">
+							{hero === "full" ? mastheadTitle : <a href="/">{mastheadTitle}</a>}
+						</h1>
+					)
 				}
-				<LiveSearch placeholder="Search..." collections={["posts", "pages"]} />
-			</nav>
+				<div class="masthead__rule"></div>
+				{heroLede && <p class="lede masthead__lede">{heroLede}</p>}
+			</div>
 		</header>
 
-		<main>
-			<slot />
-		</main>
+		<div class="shell">
+			<aside class="shell__left">
+				<nav class="rooms" aria-label="Sections">
+					<div class="kicker kicker--muted rooms__label">the rooms</div>
+					{
+						menu?.items.map((item) => (
+							<a class="chip" href={item.url} target={item.target}>
+								{item.label}
+							</a>
+						))
+					}
+				</nav>
+				<Rail name="rail-left" />
+			</aside>
 
-		<footer>
-			<WidgetArea name="sidebar" />
+			<main class="shell__main">
+				<slot />
+			</main>
+
+			<aside class="shell__right">
+				<Rail name="rail" />
+			</aside>
+		</div>
+
+		<footer class="footer">
+			<div class="footer__line">
+				faustina johnson · the valley · all pieces their own
+			</div>
+			<div class="footer__sign">thank you for reading slowly</div>
 		</footer>
 
 		<EmDashBodyEnd page={pageCtx} />
 	</body>
 </html>
+
+<style>
+	/* ---------- Top bar ---------- */
+
+	.topbar {
+		background: linear-gradient(#1b1512, #0c0a09);
+		border-bottom: 1px solid #2e241d;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 12px;
+		padding: 5px 14px;
+		font-family: var(--font-mono);
+		font-size: 11px;
+		letter-spacing: 0.08em;
+		color: var(--muted);
+		text-transform: uppercase;
+	}
+
+	.topbar__mark {
+		color: var(--ember);
+		white-space: nowrap;
+	}
+
+	.topbar__link {
+		color: var(--muted);
+		white-space: nowrap;
+	}
+
+	/* ---------- Masthead ---------- */
+
+	.masthead {
+		position: relative;
+		overflow: hidden;
+		border-bottom: 2px solid #2a201a;
+		background: radial-gradient(
+			120% 140% at 50% 118%,
+			#3a2213 0%,
+			#1a100b 34%,
+			#0a0807 68%,
+			var(--ink) 100%
+		);
+	}
+
+	/* Vertical slats read as light falling through a shuttered window. */
+	.masthead__slats {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		opacity: 0.55;
+		background-image: linear-gradient(
+			90deg,
+			rgba(0, 0, 0, 0.85) 0 6px,
+			transparent 6px 34px,
+			rgba(0, 0, 0, 0.7) 34px 44px,
+			transparent 44px 96px,
+			rgba(0, 0, 0, 0.8) 96px 104px,
+			transparent 104px 150px
+		);
+	}
+
+	.masthead__glow {
+		left: 50%;
+		bottom: -40px;
+		width: 520px;
+		height: 340px;
+		max-width: 100%;
+		transform: translateX(-50%);
+	}
+
+	.masthead__inner {
+		position: relative;
+		text-align: center;
+		padding: 56px 20px 40px;
+	}
+
+	.masthead__kicker {
+		margin-bottom: 14px;
+	}
+
+	.masthead__title {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: clamp(46px, 11vw, 74px);
+		line-height: 0.94;
+		font-weight: 400;
+		color: var(--parchment);
+		text-shadow:
+			0 0 2px #fff2d8,
+			0 0 18px rgba(255, 168, 72, 0.55),
+			0 0 54px rgba(200, 70, 30, 0.4),
+			0 3px 0 #000;
+		animation: flick 7s ease-in-out infinite;
+	}
+
+	.masthead__title a {
+		color: inherit;
+	}
+
+	.masthead__logo img {
+		margin: 0 auto;
+		max-height: 96px;
+		width: auto;
+	}
+
+	.masthead__rule {
+		margin: 18px auto 0;
+		width: 220px;
+		max-width: 60%;
+		height: 1px;
+		background: linear-gradient(90deg, transparent, var(--rust), transparent);
+	}
+
+	.masthead__lede {
+		margin: 16px auto 0;
+		max-width: 560px;
+	}
+
+	.masthead--compact .masthead__inner {
+		padding: 26px 20px 22px;
+	}
+
+	.masthead--compact .masthead__title {
+		font-size: clamp(30px, 6vw, 42px);
+		animation: none;
+	}
+
+	.masthead--compact .masthead__glow {
+		bottom: -90px;
+		height: 240px;
+	}
+
+	/* ---------- Three-column shell ---------- */
+
+	.shell {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 22px;
+		max-width: var(--measure);
+		margin: 0 auto;
+		padding: 26px 20px 0;
+		align-items: flex-start;
+	}
+
+	.shell__left {
+		flex: 1 1 186px;
+		max-width: 220px;
+		min-width: 150px;
+		display: flex;
+		flex-direction: column;
+		gap: 22px;
+		position: sticky;
+		top: 14px;
+	}
+
+	.shell__main {
+		flex: 4 1 520px;
+		display: flex;
+		flex-direction: column;
+		gap: 34px;
+		min-width: 0;
+	}
+
+	.shell__right {
+		flex: 1 1 214px;
+		min-width: 190px;
+	}
+
+	.rooms {
+		display: flex;
+		flex-direction: column;
+		gap: 7px;
+	}
+
+	.rooms__label {
+		padding-left: 2px;
+		margin-bottom: 2px;
+	}
+
+	/* ---------- Footer ---------- */
+
+	.footer {
+		margin-top: 38px;
+		padding: 20px 20px 30px;
+		border-top: 1px solid var(--rule);
+		background: linear-gradient(var(--ink-3), var(--ink));
+		text-align: center;
+	}
+
+	.footer__line {
+		font-family: var(--font-mono);
+		font-size: 10.5px;
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--faint);
+	}
+
+	.footer__sign {
+		margin-top: 9px;
+		font-size: 15px;
+		font-style: italic;
+		color: var(--faintest);
+	}
+
+	/* Below the three-column breakpoint the rails unstick and run full width,
+	   so the reading column is never squeezed. */
+	@media (max-width: 900px) {
+		.shell__left,
+		.shell__right {
+			position: static;
+			max-width: none;
+			flex-basis: 100%;
+		}
+	}
+</style>

@@ -1,0 +1,85 @@
+---
+import { getEmDashCollection } from "emdash";
+import Frame from "../Frame.astro";
+
+interface Props {
+	title?: string;
+	caption?: string;
+	href?: string;
+}
+
+const { title = "from the field", caption = "", href = "/posts" } = Astro.props;
+
+// The rail borrows lead images from the most recent pieces, so it fills itself
+// as the editor publishes rather than needing its own uploads.
+const { entries, cacheHint } = await getEmDashCollection("posts", {
+	status: "published",
+	limit: 4,
+	orderBy: { published_on: "desc" },
+});
+if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
+
+const withImages = entries.filter((entry) => entry.data.featured_image);
+const lead = withImages[0] ?? null;
+const thumbs = withImages.slice(1, 4);
+const thumbSlots = Array.from({ length: 3 }, (_, i) => thumbs[i] ?? null);
+---
+
+<div class="ff__head">
+	<span class="kicker kicker--flame">{title}</span>
+	<a class="ff__all" href={href}>all →</a>
+</div>
+
+<Frame image={lead?.data.featured_image ?? null} ratio="4/3" label={"photo\ntreeline, dusk"} />
+
+{caption && <p class="ff__caption">{caption}</p>}
+
+<div class="ff__grid">
+	{
+		thumbSlots.map((entry) => {
+			const Tag = entry ? "a" : "span";
+			return (
+				<Tag class="ff__thumb" href={entry ? `/posts/${entry.id}` : undefined}>
+					<Frame image={entry?.data.featured_image ?? null} ratio="1/1" />
+				</Tag>
+			);
+		})
+	}
+</div>
+
+<style>
+	.ff__head {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 8px;
+		margin-bottom: 9px;
+	}
+
+	.ff__all {
+		font-family: var(--font-mono);
+		font-size: 9.5px;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--muted-2);
+	}
+
+	.ff__caption {
+		margin: 7px 0 0;
+		font-size: 14px;
+		font-style: italic;
+		line-height: 1.4;
+		color: #7f6f5e;
+	}
+
+	.ff__grid {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 5px;
+		margin-top: 9px;
+	}
+
+	.ff__thumb {
+		display: block;
+	}
+</style>

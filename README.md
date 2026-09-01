@@ -1,4 +1,4 @@
-# fuzzy-bear
+# Personal portfolio website
 
 A website built with [EmDash](https://github.com/emdash-cms/emdash), a full-stack TypeScript CMS on Astro, running on Cloudflare Workers. Scaffolded from the EmDash `starter-cloudflare` template: posts, pages, categories and tags with minimal styling, meant as a base to build on.
 
@@ -47,8 +47,8 @@ Other scripts: `pnpm build`, `pnpm preview`, `pnpm typecheck`.
 One-time setup in your Cloudflare account (names must match `wrangler.jsonc`):
 
 ```bash
-npx wrangler d1 create fuzzy-bear
-npx wrangler r2 bucket create fuzzy-bear-media
+pnpm exec wrangler d1 create faustinajohnson-com
+pnpm exec wrangler r2 bucket create faustinajohnson-com-media
 ```
 
 Then:

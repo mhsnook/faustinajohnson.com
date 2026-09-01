@@ -1,0 +1,105 @@
+---
+import { getMenu } from "emdash";
+import type { Widget } from "emdash";
+import { PortableText } from "emdash/ui";
+import Candle from "./widgets/Candle.astro";
+import FieldPhotos from "./widgets/FieldPhotos.astro";
+import NowPlaying from "./widgets/NowPlaying.astro";
+import Publications from "./widgets/Publications.astro";
+import RecentPosts from "./widgets/RecentPosts.astro";
+import TermList from "./widgets/TermList.astro";
+
+interface Props {
+	widget: Widget;
+}
+
+const { widget } = Astro.props;
+
+// Seed files declare these under `props`; EmDash exposes them at runtime as
+// `componentProps`. Widget areas seeded before that rename have none, so the
+// components must all render from their own defaults.
+const settings = (widget.componentProps ?? {}) as Record<string, never>;
+
+const componentId = widget.type === "component" ? widget.componentId : null;
+
+// FieldPhotos draws its own header, so it can put the "all →" link on the title row.
+const selfTitled = componentId === "site:field-photos";
+// Now playing runs ember; every other rail heading runs the muted flame.
+const isNowPlaying = componentId === "site:now-playing";
+
+const menu =
+	widget.type === "menu" && widget.menuName ? await getMenu(widget.menuName) : null;
+---
+
+<div class="panel panel--sunk">
+	{
+		!selfTitled && widget.title && (
+			<div class:list={["kicker", "rail-block__title", !isNowPlaying && "kicker--flame"]}>
+				{widget.title}
+			</div>
+		)
+	}
+
+	{
+		widget.type === "content" && widget.content && (
+			<div class="rail-prose">
+				<PortableText value={widget.content} />
+			</div>
+		)
+	}
+
+	{
+		widget.type === "menu" && menu && (
+			<nav class="rail-menu">
+				{menu.items.map((item) => (
+					<a href={item.url} target={item.target}>
+						{item.label}
+					</a>
+				))}
+			</nav>
+		)
+	}
+
+	{componentId === "site:candle" && <Candle {...settings} />}
+	{componentId === "site:now-playing" && <NowPlaying {...settings} />}
+	{componentId === "site:publications" && <Publications {...settings} />}
+	{componentId === "site:field-photos" && <FieldPhotos title={widget.title} {...settings} />}
+	{componentId === "core:recent-posts" && <RecentPosts {...settings} />}
+	{componentId === "core:categories" && <TermList taxonomy="category" {...settings} />}
+	{componentId === "core:tags" && <TermList taxonomy="tag" {...settings} />}
+</div>
+
+<style>
+	.rail-block__title {
+		display: block;
+		margin-bottom: 10px;
+	}
+
+	.rail-prose :global(p) {
+		margin: 0 0 9px;
+		font-size: 15.5px;
+		line-height: 1.4;
+		color: #a3937c;
+	}
+
+	.rail-prose :global(p:last-child) {
+		margin-bottom: 0;
+	}
+
+	.rail-prose :global(strong) {
+		font-weight: 400;
+		color: var(--linen);
+	}
+
+	.rail-prose :global(a) {
+		color: var(--gold);
+	}
+
+	.rail-menu {
+		display: flex;
+		flex-direction: column;
+		gap: 7px;
+		font-size: 15.5px;
+		color: #a3937c;
+	}
+</style>

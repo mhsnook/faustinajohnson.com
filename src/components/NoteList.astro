@@ -1,0 +1,21 @@
+---
+import type { Note } from "../../emdash-env";
+import { formatNoteDate } from "../utils/dates";
+
+interface Props {
+	notes: { id: string; data: Note }[];
+}
+
+const { notes } = Astro.props;
+---
+
+<div class="notes__list">
+	{
+		notes.map((note) => (
+			<a class="note" href={`/notes/${note.id}`}>
+				<span class="note__date">{formatNoteDate(note.data.note_date)}</span>
+				<span class="note__title">{note.data.title}</span>
+			</a>
+		))
+	}
+</div>

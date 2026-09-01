@@ -1,0 +1,47 @@
+---
+import type { TaxonomyTerm } from "emdash";
+import PieceCard from "./PieceCard.astro";
+import SectionHead from "./SectionHead.astro";
+import Base from "../layouts/Base.astro";
+import type { Post } from "../../emdash-env";
+
+interface Props {
+	term: TaxonomyTerm;
+	posts: { id: string; data: Post }[];
+	/** Shown as the masthead kicker, e.g. "category" or "tag". */
+	kind: string;
+	rule?: "ember" | "dim";
+}
+
+const { term, posts, kind, rule = "ember" } = Astro.props;
+const count = `${posts.length} ${posts.length === 1 ? "piece" : "pieces"}`;
+---
+
+<Base
+	title={`${term.label} pieces`}
+	description={`Pieces in ${term.label}`}
+	heroTitle={term.label}
+	heroKicker={kind}
+>
+	<section>
+		<SectionHead title={term.label} meta={count} rule={rule} />
+		{
+			posts.length === 0 ? (
+				<p class="empty">Nothing here yet.</p>
+			) : (
+				<div class="list">
+					{posts.map((post, index) => (
+						<PieceCard
+							href={`/posts/${post.id}`}
+							title={post.data.title}
+							kicker={post.data.kicker}
+							excerpt={post.data.excerpt}
+							image={post.data.featured_image}
+							flip={index % 2 === 1}
+						/>
+					))}
+				</div>
+			)
+		}
+	</section>
+</Base>

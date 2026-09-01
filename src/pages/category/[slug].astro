@@ -1,7 +1,6 @@
 ---
-import { getTerm, getEmDashCollection, decodeSlug } from "emdash";
-import { Image } from "emdash/ui";
-import Base from "../../layouts/Base.astro";
+import { decodeSlug, getEmDashCollection, getTerm } from "emdash";
+import TermArchive from "../../components/TermArchive.astro";
 
 const slug = decodeSlug(Astro.params.slug);
 const term = slug ? await getTerm("category", slug) : null;
@@ -10,33 +9,12 @@ if (!term) {
 	return Astro.redirect("/404");
 }
 
-const { entries: posts } = await getEmDashCollection("posts", {
+const { entries: posts, cacheHint } = await getEmDashCollection("posts", {
+	status: "published",
 	where: { category: term.slug },
-	orderBy: { published_at: "desc" },
+	orderBy: { published_on: "desc" },
 });
+if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
 ---
 
-<Base title={`${term.label} posts`} description={`Posts in ${term.label}`}>
-	<h1>{term.label}</h1>
-	<p>{posts.length} {posts.length === 1 ? "post" : "posts"}</p>
-
-	{
-		posts.length === 0 ? (
-			<p>No posts in this category yet.</p>
-		) : (
-			<ul>
-				{posts.map((post) => (
-					<li>
-						<a href={`/posts/${post.id}`}>
-							{post.data.featured_image && (
-								<Image image={post.data.featured_image} />
-							)}
-							<h2>{post.data.title}</h2>
-						</a>
-						{post.data.excerpt && <p>{post.data.excerpt}</p>}
-					</li>
-				))}
-			</ul>
-		)
-	}
-</Base>
+<TermArchive term={term} posts={posts} kind="category" />

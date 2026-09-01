@@ -1,8 +1,9 @@
 ---
-import { getEmDashEntry, getSeoMeta, decodeSlug, getSiteSettings } from "emdash";
+import { decodeSlug, getEmDashEntry, getSeoMeta, getSiteSettings } from "emdash";
 import { PortableText } from "emdash/ui";
+import Frame from "../components/Frame.astro";
 import Base from "../layouts/Base.astro";
-import { resolveStarterSiteIdentity } from "../utils/site-identity";
+import { AUTHOR_PORTRAIT, resolveStarterSiteIdentity } from "../utils/site-identity";
 
 const slug = decodeSlug(Astro.params.slug);
 
@@ -24,6 +25,8 @@ const seo = getSeoMeta(page, {
 	siteUrl: Astro.url.origin,
 	path: `/${slug}`,
 });
+
+const portrait = page.data.portrait ?? (slug === "about" ? AUTHOR_PORTRAIT : null);
 ---
 
 <Base
@@ -32,10 +35,34 @@ const seo = getSeoMeta(page, {
 	description={seo.description}
 	canonical={seo.canonical}
 	content={{ collection: "pages", id: page.data.id, slug }}
+	heroTitle={page.data.title}
+	heroKicker={page.data.kicker ?? "a page"}
 >
-	<article>
-		<h1 {...page.edit.title}>{page.data.title}</h1>
-
-		<PortableText value={page.data.content} />
+	<article class="panel">
+		<div class:list={[portrait && "portrait-grid"]}>
+			{portrait && <Frame image={portrait} ratio="4/5" label={"portrait\nlamplight, 3/4"} />}
+			<div>
+				<h1 class="page__title" {...page.edit.title}>{page.data.title}</h1>
+				{page.data.kicker && <div class="kicker page__kicker">{page.data.kicker}</div>}
+				<div class="prose">
+					<PortableText value={page.data.content} />
+				</div>
+			</div>
+		</div>
 	</article>
 </Base>
+
+<style>
+	.page__title {
+		margin: 0 0 4px;
+		font-family: var(--font-display);
+		font-size: clamp(26px, 4.4vw, 34px);
+		line-height: 1.12;
+		font-weight: 400;
+		color: var(--parchment);
+	}
+
+	.page__kicker {
+		margin-bottom: 14px;
+	}
+</style>

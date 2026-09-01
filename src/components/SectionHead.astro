@@ -1,0 +1,37 @@
+---
+interface Props {
+	title: string;
+	meta?: string | null;
+	/** "ember" is the loud rule used by The Work; "dim" is the quiet one used by Field Notes. */
+	rule?: "ember" | "dim";
+	/** Turns the meta label into a link. */
+	metaHref?: string | null;
+}
+
+const { title, meta, rule = "ember", metaHref } = Astro.props;
+---
+
+<div class="section-head">
+	<h2 class="section-head__title">{title}</h2>
+	<div class:list={["section-head__rule", rule === "dim" && "section-head__rule--dim"]}></div>
+	{
+		meta &&
+			(metaHref ? (
+				<a class="section-head__meta" href={metaHref}>
+					{meta}
+				</a>
+			) : (
+				<span class="section-head__meta">{meta}</span>
+			))
+	}
+</div>
+
+<style>
+	.section-head__rule--dim {
+		background: linear-gradient(90deg, #5a4030, transparent);
+	}
+
+	a.section-head__meta:hover {
+		color: var(--gold-hover);
+	}
+</style>

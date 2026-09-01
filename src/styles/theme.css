@@ -1,0 +1,525 @@
+/* Faustina Johnson — writer portfolio.
+   Imported from the Claude Design canvas "Writer Portfolio.dc.html".
+   --font-display and --font-body are bound by the `fonts` array in astro.config.mjs. */
+
+:root {
+	/* Ground */
+	--ink: #080706;
+	--ink-2: #0a0807;
+	--ink-3: #0b0908;
+
+	/* Panel fills */
+	--panel-top: #141010;
+	--panel-bottom: #0b0908;
+	--panel-alt-top: #151110;
+	--sunk-top: #120e0c;
+	--sunk-bottom: #0a0807;
+	--well-top: #100c0a;
+	--chip-top: #191411;
+	--chip-bottom: #0e0b09;
+
+	/* Bevel edges — light source is top-left */
+	--bevel-light: #4c4036;
+	--bevel-mid: #3b322b;
+	--bevel-dark: #17120f;
+	--bevel-darker: #120f0d;
+	--bevel-hot: #7a5a3c;
+	--bevel-hot-2: #5c4630;
+
+	/* Fire */
+	--ember: #b8332a;
+	--ember-bright: #c8462f;
+	--rust: #a8371f;
+	--flame: #8a5a3a;
+	--gold: #e0a45a;
+	--gold-hover: #ffd79a;
+	--crimson-top: #8f2417;
+	--crimson-bottom: #5c150c;
+
+	/* Type */
+	--parchment: #f3e6cf;
+	--parchment-2: #f0e2ca;
+	--parchment-3: #ecdcc2;
+	--linen: #ddcbaf;
+	--linen-2: #d9c9ad;
+	--body-1: #c6b79f;
+	--body-2: #a99b84;
+	--body-3: #9b8d78;
+	--muted: #7d6d5c;
+	--muted-2: #6d5c4b;
+	--muted-3: #6f5d4b;
+	--faint: #5f5145;
+	--faintest: #4e4238;
+
+	--rule: #241c16;
+	--hairline: #211a15;
+
+	--font-mono: "Courier New", Courier, monospace;
+	--measure: 1180px;
+}
+
+/* ---------- Reset and page ground ---------- */
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	background: var(--ink);
+}
+
+body {
+	min-height: 100vh;
+	background-color: var(--ink);
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.16'/%3E%3C/svg%3E");
+	font-family: var(--font-body);
+	font-size: 17px;
+	line-height: 1.6;
+	color: #cdbfa8;
+	-webkit-font-smoothing: antialiased;
+}
+
+img {
+	max-width: 100%;
+	display: block;
+}
+
+a {
+	color: #e8dcc8;
+	text-decoration: none;
+}
+
+a:hover {
+	color: var(--gold-hover);
+}
+
+::selection {
+	background: var(--crimson-top);
+	color: #fff;
+}
+
+:focus-visible {
+	outline: 2px solid var(--gold);
+	outline-offset: 2px;
+}
+
+/* ---------- Motion ---------- */
+
+@keyframes flick {
+	0%, 100% { opacity: 0.92; }
+	18% { opacity: 1; }
+	37% { opacity: 0.78; }
+	52% { opacity: 0.98; }
+	68% { opacity: 0.84; }
+	83% { opacity: 1; }
+}
+
+@keyframes breathe {
+	0%, 100% { opacity: 0.55; transform: scale(1); }
+	50% { opacity: 0.85; transform: scale(1.06); }
+}
+
+@keyframes eq {
+	0%, 100% { height: 3px; }
+	50% { height: 14px; }
+}
+
+@keyframes crawl {
+	0% { transform: translateX(0); }
+	100% { transform: translateX(-50%); }
+}
+
+/* The candle flicker and the title glow pulse are decorative. Photosensitive
+   readers get the same layout with every animation held at its resting frame. */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation: none !important;
+		transition: none !important;
+	}
+}
+
+/* ---------- Typographic primitives ---------- */
+
+.kicker {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: var(--ember);
+}
+
+.kicker--flame { color: var(--flame); }
+.kicker--muted { color: var(--muted-2); }
+.kicker--wide { letter-spacing: 0.32em; }
+
+.lede {
+	font-size: 19px;
+	line-height: 1.55;
+	font-style: italic;
+	color: #b6a68e;
+	text-wrap: pretty;
+}
+
+.prose p {
+	margin: 0 0 10px;
+	font-size: 17.5px;
+	line-height: 1.62;
+	color: var(--body-1);
+	text-wrap: pretty;
+}
+
+.prose p:last-child {
+	margin-bottom: 0;
+}
+
+.prose h2,
+.prose h3 {
+	font-family: var(--font-display);
+	font-weight: 400;
+	color: var(--parchment-2);
+	margin: 26px 0 10px;
+}
+
+.prose h2 { font-size: 27px; }
+.prose h3 { font-size: 21px; }
+
+.prose a {
+	color: var(--gold);
+	border-bottom: 1px solid rgba(224, 164, 90, 0.35);
+}
+
+.prose blockquote {
+	margin: 20px 0;
+	padding-left: 16px;
+	border-left: 2px solid var(--rust);
+	font-style: italic;
+	color: #b7a68c;
+}
+
+.prose ul,
+.prose ol {
+	margin: 0 0 14px;
+	padding-left: 22px;
+	color: var(--body-1);
+}
+
+.prose li {
+	margin-bottom: 5px;
+}
+
+.prose code {
+	font-family: var(--font-mono);
+	font-size: 0.92em;
+	color: var(--gold);
+}
+
+.prose hr {
+	border: 0;
+	height: 1px;
+	background: linear-gradient(90deg, var(--rust), transparent);
+	margin: 26px 0;
+}
+
+/* ---------- Bevelled panels ---------- */
+
+.panel {
+	background: linear-gradient(var(--panel-top), var(--panel-bottom));
+	border: 2px solid;
+	border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-darker) var(--bevel-mid);
+	box-shadow:
+		inset 0 1px 0 rgba(255, 214, 160, 0.12),
+		0 3px 0 #000,
+		0 0 40px rgba(0, 0, 0, 0.8);
+	padding: 20px;
+}
+
+/* Sunken: the bevel is inverted so the block reads as pressed into the page. */
+.panel--sunk {
+	background: linear-gradient(var(--sunk-top), var(--sunk-bottom));
+	border-color: var(--bevel-dark) var(--bevel-mid) var(--bevel-light) var(--bevel-darker);
+	box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.85);
+	padding: 13px;
+}
+
+.panel--glow {
+	background: radial-gradient(120% 160% at 50% 0%, #241509 0%, #14100c 42%, var(--ink-2) 100%);
+	padding: 26px 22px 24px;
+}
+
+.panel--hearth {
+	background: radial-gradient(110% 180% at 50% 130%, #3a2213 0%, #170f0a 44%, var(--ink) 100%);
+	position: relative;
+	overflow: hidden;
+	padding: 30px 24px;
+	text-align: center;
+}
+
+/* ---------- Image frames ---------- */
+
+.frame {
+	align-self: start;
+	padding: 6px;
+	background: var(--ink-2);
+	border: 2px solid;
+	border-color: var(--bevel-dark) var(--bevel-mid) var(--bevel-light) var(--bevel-darker);
+	box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+.frame img {
+	width: 100%;
+	height: auto;
+}
+
+/* Hatched fill stands in for an image the editor has not uploaded yet. */
+.frame__empty {
+	background-color: var(--well-top);
+	background-image: repeating-linear-gradient(135deg, rgba(255, 190, 110, 0.09) 0 3px, transparent 3px 8px);
+	display: flex;
+	align-items: flex-end;
+	padding: 7px;
+}
+
+.frame__label {
+	font-family: var(--font-mono);
+	font-size: 8.5px;
+	line-height: 1.3;
+	letter-spacing: 0.06em;
+	color: var(--muted-3);
+	text-transform: uppercase;
+	white-space: pre-line;
+}
+
+/* ---------- Buttons and chips ---------- */
+
+.chip {
+	display: block;
+	padding: 9px 12px;
+	font-family: var(--font-display);
+	font-size: 15px;
+	letter-spacing: 0.04em;
+	color: var(--linen-2);
+	background: linear-gradient(var(--chip-top), var(--chip-bottom));
+	border: 2px solid;
+	border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-darker) var(--bevel-mid);
+	box-shadow: inset 0 1px 0 rgba(255, 214, 160, 0.13), 0 2px 0 #000;
+}
+
+.chip:hover,
+.chip[aria-current="page"] {
+	color: var(--gold-hover);
+	background: linear-gradient(#241a14, #130e0b);
+	box-shadow: inset 0 0 18px rgba(255, 150, 60, 0.22), 0 2px 0 #000;
+}
+
+.btn {
+	display: inline-block;
+	padding: 11px 20px;
+	font-family: var(--font-mono);
+	font-size: 12px;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--linen-2);
+	background: linear-gradient(var(--chip-top), var(--chip-bottom));
+	border: 2px solid;
+	border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-darker) var(--bevel-mid);
+	box-shadow: inset 0 1px 0 rgba(255, 214, 160, 0.13), 0 2px 0 #000;
+}
+
+.btn:hover {
+	color: var(--gold-hover);
+	box-shadow: inset 0 0 18px rgba(255, 150, 60, 0.22), 0 2px 0 #000;
+}
+
+.btn--ember {
+	color: #f5e3c6;
+	background: linear-gradient(var(--crimson-top), var(--crimson-bottom));
+	border-color: #c05a3f #3a0d07 #350c06 #a8452e;
+	box-shadow: inset 0 1px 0 rgba(255, 200, 160, 0.3), 0 2px 0 #000;
+}
+
+.btn--ember:hover {
+	color: #fff;
+	background: linear-gradient(#a82c1c, #6d190f);
+	box-shadow: inset 0 0 20px rgba(255, 190, 120, 0.3), 0 2px 0 #000;
+}
+
+/* ---------- Section headings ---------- */
+
+.section-head {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 18px;
+}
+
+.section-head__title {
+	margin: 0;
+	font-family: var(--font-display);
+	font-weight: 400;
+	font-size: 31px;
+	color: var(--parchment-2);
+	text-shadow: 0 0 16px rgba(255, 160, 70, 0.3);
+	white-space: nowrap;
+}
+
+.section-head__rule {
+	flex: 1;
+	height: 1px;
+	background: linear-gradient(90deg, var(--rust), transparent);
+}
+
+.section-head__meta {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--muted-2);
+	white-space: nowrap;
+}
+
+/* ---------- Lists shared by the archive routes ---------- */
+
+.list {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.empty {
+	color: var(--body-2);
+}
+
+.tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.tags a {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--muted-2);
+}
+
+.tags a:hover {
+	color: var(--gold-hover);
+}
+
+/* ---------- Field-note rows ---------- */
+
+.notes__list {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.note {
+	display: grid;
+	grid-template-columns: 96px minmax(0, 1fr);
+	gap: 14px;
+	padding: 11px 10px;
+	border-bottom: 1px solid var(--hairline);
+}
+
+.note:last-child {
+	border-bottom: 0;
+}
+
+.note:hover {
+	background: rgba(255, 150, 60, 0.06);
+}
+
+.note__date {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	letter-spacing: 0.06em;
+	color: var(--flame);
+}
+
+.note__title {
+	font-size: 17px;
+	color: #c2b39c;
+}
+
+@media (max-width: 480px) {
+	.note {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 3px;
+	}
+}
+
+/* ---------- Portrait grid (bio block and the About page) ---------- */
+
+.portrait-grid {
+	display: grid;
+	grid-template-columns: 132px minmax(0, 1fr);
+	gap: 20px;
+	align-items: start;
+}
+
+@media (max-width: 560px) {
+	.portrait-grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.portrait-grid > .frame {
+		max-width: 160px;
+	}
+}
+
+/* ---------- Glow ornament ---------- */
+
+.glow {
+	position: absolute;
+	pointer-events: none;
+	background: radial-gradient(closest-side, rgba(255, 178, 86, 0.28), rgba(255, 140, 40, 0) 72%);
+	animation: breathe 5.5s ease-in-out infinite;
+}
+
+.glow--hearth {
+	left: 50%;
+	bottom: -70px;
+	width: 340px;
+	height: 220px;
+	max-width: 100%;
+	transform: translateX(-50%);
+	animation-duration: 6s;
+}
+
+.hearth__inner {
+	position: relative;
+}
+
+.hearth__title {
+	margin: 0 0 8px;
+	font-family: var(--font-display);
+	font-size: 28px;
+	font-weight: 400;
+	color: var(--parchment);
+}
+
+.hearth__body {
+	margin: 0 0 16px;
+	font-size: 17.5px;
+	line-height: 1.6;
+	color: var(--body-2);
+}
+
+.hearth__actions {
+	display: flex;
+	gap: 10px;
+	justify-content: center;
+	flex-wrap: wrap;
+}
+
+/* ---------- Utility ---------- */
+

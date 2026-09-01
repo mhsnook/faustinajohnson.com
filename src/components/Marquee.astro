@@ -1,0 +1,50 @@
+---
+import { extractPlainText, getWidgetArea } from "emdash";
+
+const area = await getWidgetArea("marquee");
+const lines =
+	area?.widgets.flatMap((widget) =>
+		widget.type === "content"
+			? extractPlainText(widget.content)
+					.split("\n")
+					.map((line) => line.trim())
+					.filter(Boolean)
+			: [],
+	) ?? [];
+
+// The strip scrolls by exactly half its width, so the list is printed twice to
+// make the wrap seamless.
+const run = lines.join("  ·  ");
+---
+
+{
+	lines.length > 0 && (
+		<span class="marquee">
+			<span class="marquee__run">
+				{run}
+				{"  ·  "}
+				{run}
+				{"  ·  "}
+			</span>
+		</span>
+	)
+}
+
+<style>
+	.marquee {
+		overflow: hidden;
+		max-width: 44%;
+		white-space: nowrap;
+	}
+
+	.marquee__run {
+		display: inline-block;
+		animation: crawl 26s linear infinite;
+	}
+
+	@media (max-width: 700px) {
+		.marquee {
+			display: none;
+		}
+	}
+</style>

@@ -2,19 +2,20 @@
 	"$schema": "https://emdashcms.com/seed.schema.json",
 	"version": "1",
 	"meta": {
-		"name": "Starter",
-		"description": "A minimal EmDash starter with posts and pages",
-		"author": "EmDash"
+		"name": "Faustina Johnson Portfolio",
+		"description": "Long-form journalist and editor portfolio — pieces, field notes, method, correspondence",
+		"author": "Faustina Johnson"
 	},
 	"settings": {
-		"title": "My Site",
-		"tagline": "Built with EmDash"
+		"title": "Faustina",
+		"tagline": "Reporting from the edges of maps and the middle of arguments. Land, kinship, devotion, and the noise people make at five in the morning."
 	},
 	"collections": [
 		{
 			"slug": "posts",
-			"label": "Posts",
-			"labelSingular": "Post",
+			"label": "Pieces",
+			"labelSingular": "Piece",
+			"urlPattern": "/posts/{slug}",
 			"supports": ["drafts", "revisions", "search", "seo"],
 			"fields": [
 				{
@@ -25,8 +26,25 @@
 					"searchable": true
 				},
 				{
+					"slug": "kicker",
+					"label": "Kicker",
+					"type": "string",
+					"options": {
+						"help": "The small line above the title, e.g. \"i · field report · 9,400 words · the valley\""
+					}
+				},
+				{
+					"slug": "published_on",
+					"label": "Published",
+					"type": "datetime",
+					"required": true,
+					"options": {
+						"help": "Drives the order of The Work and the year range beside it."
+					}
+				},
+				{
 					"slug": "featured_image",
-					"label": "Featured Image",
+					"label": "Lead Image",
 					"type": "image"
 				},
 				{
@@ -38,7 +56,70 @@
 				{
 					"slug": "excerpt",
 					"label": "Excerpt",
-					"type": "text"
+					"type": "text",
+					"options": { "rows": 4 }
+				}
+			]
+		},
+		{
+			"slug": "notes",
+			"label": "Field Notes",
+			"labelSingular": "Field Note",
+			"urlPattern": "/notes/{slug}",
+			"supports": ["drafts", "revisions", "search", "seo"],
+			"fields": [
+				{
+					"slug": "title",
+					"label": "Title",
+					"type": "string",
+					"required": true,
+					"searchable": true
+				},
+				{
+					"slug": "note_date",
+					"label": "Dateline",
+					"type": "datetime",
+					"required": true,
+					"options": {
+						"help": "Shown beside the title in the Field Notes list, and used to sort it."
+					}
+				},
+				{
+					"slug": "content",
+					"label": "Content",
+					"type": "portableText",
+					"searchable": true
+				}
+			]
+		},
+		{
+			"slug": "tenets",
+			"label": "Method",
+			"labelSingular": "Tenet",
+			"supports": ["drafts", "revisions"],
+			"fields": [
+				{
+					"slug": "title",
+					"label": "Title",
+					"type": "string",
+					"required": true
+				},
+				{
+					"slug": "numeral",
+					"label": "Numeral",
+					"type": "string",
+					"options": { "help": "Roman numeral shown above the title, e.g. \"i.\"" }
+				},
+				{
+					"slug": "body",
+					"label": "Body",
+					"type": "text",
+					"options": { "rows": 4 }
+				},
+				{
+					"slug": "sort_order",
+					"label": "Order",
+					"type": "integer"
 				}
 			]
 		},
@@ -57,6 +138,17 @@
 					"searchable": true
 				},
 				{
+					"slug": "kicker",
+					"label": "Kicker",
+					"type": "string",
+					"options": { "help": "Small monospace line under the title." }
+				},
+				{
+					"slug": "portrait",
+					"label": "Portrait",
+					"type": "image"
+				},
+				{
 					"slug": "content",
 					"label": "Content",
 					"type": "portableText",
@@ -73,14 +165,10 @@
 			"hierarchical": true,
 			"collections": ["posts"],
 			"terms": [
-				{
-					"slug": "general",
-					"label": "General"
-				},
-				{
-					"slug": "updates",
-					"label": "Updates"
-				}
+				{ "slug": "field-report", "label": "Field report" },
+				{ "slug": "oral-history", "label": "Oral history" },
+				{ "slug": "essay", "label": "Essay" },
+				{ "slug": "criticism", "label": "Criticism" }
 			]
 		},
 		{
@@ -90,62 +178,166 @@
 			"hierarchical": false,
 			"collections": ["posts"],
 			"terms": [
-				{
-					"slug": "starter",
-					"label": "Starter"
-				},
-				{
-					"slug": "example",
-					"label": "Example"
-				}
+				{ "slug": "land", "label": "Land" },
+				{ "slug": "kinship", "label": "Kinship" },
+				{ "slug": "devotion", "label": "Devotion" },
+				{ "slug": "the-valley", "label": "The Valley" }
 			]
 		}
 	],
 	"menus": [
 		{
 			"name": "primary",
-			"label": "Primary Navigation",
+			"label": "The Rooms",
 			"items": [
-				{
-					"type": "custom",
-					"label": "Home",
-					"url": "/"
-				},
-				{
-					"type": "custom",
-					"label": "Posts",
-					"url": "/posts"
-				},
-				{
-					"type": "custom",
-					"label": "About",
-					"url": "/about"
-				}
+				{ "type": "custom", "label": "Bio", "url": "/#bio" },
+				{ "type": "custom", "label": "The Work", "url": "/#work" },
+				{ "type": "custom", "label": "Method", "url": "/#method" },
+				{ "type": "custom", "label": "Field Notes", "url": "/#notes" },
+				{ "type": "custom", "label": "Correspondence", "url": "/#correspondence" }
+			]
+		},
+		{
+			"name": "correspondence",
+			"label": "Correspondence Buttons",
+			"items": [
+				{ "type": "custom", "label": "write to me", "url": "mailto:hello@faustinajohnson.com" },
+				{ "type": "custom", "label": "the letter (monthly)", "url": "/subscribe" }
 			]
 		}
 	],
 	"widgetAreas": [
 		{
-			"name": "sidebar",
-			"label": "Sidebar",
-			"description": "Sidebar widget area",
+			"name": "marquee",
+			"label": "Ticker",
+			"description": "The scrolling line in the top bar. One paragraph per item.",
+			"widgets": [
+				{
+					"type": "content",
+					"title": "Ticker",
+					"content": [
+						{
+							"_type": "block",
+							"style": "normal",
+							"_key": "tk0",
+							"children": [
+								{
+									"_type": "span",
+									"_key": "tk1",
+									"text": "the fence line goes to press in march"
+								}
+							]
+						},
+						{
+							"_type": "block",
+							"style": "normal",
+							"_key": "tk2",
+							"children": [
+								{
+									"_type": "span",
+									"_key": "tk3",
+									"text": "field notes from the valley, updated weekly"
+								}
+							]
+						},
+						{
+							"_type": "block",
+							"style": "normal",
+							"_key": "tk4",
+							"children": [
+								{ "_type": "span", "_key": "tk5", "text": "now taking commissions" }
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "rail-left",
+			"label": "Left Rail",
+			"description": "Sits under the navigation on every page.",
 			"widgets": [
 				{
 					"type": "component",
-					"componentId": "core:search",
-					"title": "Search"
+					"title": "the candle",
+					"componentId": "site:candle",
+					"props": { "caption": "still burning since 2013" }
+				}
+			]
+		},
+		{
+			"name": "rail",
+			"label": "Right Rail",
+			"description": "The desk column on every page.",
+			"widgets": [
+				{
+					"type": "component",
+					"title": "♫ now playing",
+					"componentId": "site:now-playing",
+					"props": {
+						"track": "Vespers for a Dry Creek",
+						"meta": "unknown · 1974 · tape rip",
+						"progress": 38
+					}
+				},
+				{
+					"type": "content",
+					"title": "on the desk",
+					"content": [
+						{
+							"_type": "block",
+							"style": "normal",
+							"_key": "d0",
+							"children": [
+								{ "_type": "span", "_key": "d1", "text": "Piece five", "marks": ["strong"] },
+								{
+									"_type": "span",
+									"_key": "d2",
+									"text": " — water rights, three counties, eighteen months in"
+								}
+							]
+						},
+						{
+							"_type": "block",
+							"style": "normal",
+							"_key": "d3",
+							"children": [
+								{ "_type": "span", "_key": "d4", "text": "Reading", "marks": ["strong"] },
+								{ "_type": "span", "_key": "d5", "text": " — county minutes, 1961–1978" }
+							]
+						},
+						{
+							"_type": "block",
+							"style": "normal",
+							"_key": "d6",
+							"children": [
+								{ "_type": "span", "_key": "d7", "text": "Away", "marks": ["strong"] },
+								{ "_type": "span", "_key": "d8", "text": " — Sept 12–30, in the field" }
+							]
+						}
+					]
 				},
 				{
 					"type": "component",
-					"componentId": "core:categories",
-					"title": "Categories"
+					"title": "appeared in",
+					"componentId": "site:publications",
+					"props": {
+						"items": [
+							"THE VALLEY REVIEW",
+							"HARROW QUARTERLY",
+							"DIRT & DEED",
+							"THE LONG COUNT",
+							"NINE MILE"
+						]
+					}
 				},
 				{
 					"type": "component",
-					"componentId": "core:recent-posts",
-					"title": "Recent Posts",
-					"settings": {
-						"count": 5
+					"title": "from the field",
+					"componentId": "site:field-photos",
+					"props": {
+						"caption": "nine miles in, the light stays on",
+						"href": "/posts"
 					}
 				}
 			]
@@ -158,19 +350,206 @@
 				"slug": "about",
 				"status": "published",
 				"data": {
-					"title": "About",
+					"title": "Who is writing",
+					"kicker": "based in the valley · reporting since 2013",
 					"content": [
 						{
 							"_type": "block",
 							"style": "normal",
+							"_key": "a0",
 							"children": [
 								{
 									"_type": "span",
-									"text": "This is the about page. Edit it in the admin panel or replace this template with your own design.",
-									"_key": "k1"
+									"_key": "a1",
+									"text": "Faustina Johnson writes long, slow pieces about who gets to stay on a piece of land and who gets asked to leave it. Twelve years of it now: county archives, kitchen tables, fence lines, church basements, the parking lot at the trailhead before dawn."
 								}
-							],
-							"_key": "k0"
+							]
+						},
+						{
+							"_type": "block",
+							"style": "normal",
+							"_key": "a2",
+							"children": [
+								{
+									"_type": "span",
+									"_key": "a3",
+									"text": "The work tends to arrive late and long. She would rather sit with a place for a year than describe it in a week. Bylines in the usual places; the good stuff is here."
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"id": "method",
+				"slug": "method",
+				"status": "published",
+				"data": {
+					"title": "Method",
+					"kicker": "how the work gets made",
+					"content": [
+						{
+							"_type": "block",
+							"style": "blockquote",
+							"_key": "m0",
+							"children": [
+								{
+									"_type": "span",
+									"_key": "m1",
+									"text": "I am not trying to be the first person to tell you something. I am trying to be the last one who has to."
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"id": "correspondence",
+				"slug": "correspondence",
+				"status": "published",
+				"data": {
+					"title": "Correspondence",
+					"content": [
+						{
+							"_type": "block",
+							"style": "normal",
+							"_key": "c0",
+							"children": [
+								{
+									"_type": "span",
+									"_key": "c1",
+									"text": "Tips, corrections, invitations, and arguments. All read; most answered."
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"tenets": [
+			{
+				"id": "tenet-1",
+				"slug": "long-form",
+				"status": "published",
+				"data": {
+					"title": "Long form",
+					"numeral": "i.",
+					"sort_order": 1,
+					"body": "Nothing under four thousand words. The length is not vanity; it is the minimum space in which two people can both be right."
+				}
+			},
+			{
+				"id": "tenet-2",
+				"slug": "field-research",
+				"status": "published",
+				"data": {
+					"title": "Field research",
+					"numeral": "ii.",
+					"sort_order": 2,
+					"body": "Months on the ground before a word. Deed books, minutes of meetings nobody attended, and a great deal of sitting in trucks waiting for someone to be ready to talk."
+				}
+			},
+			{
+				"id": "tenet-3",
+				"slug": "cultural-context",
+				"status": "published",
+				"data": {
+					"title": "Cultural context",
+					"numeral": "iii.",
+					"sort_order": 3,
+					"body": "A dispute over water is never only about water. The piece is finished when the reader understands what the argument is standing in for."
+				}
+			}
+		],
+		"notes": [
+			{
+				"id": "note-1",
+				"slug": "two-sets-of-maps",
+				"status": "published",
+				"data": {
+					"title": "The county clerk keeps two sets of maps and will only show you one of them",
+					"note_date": "2026-08-24T09:00:00.000Z",
+					"content": [
+						{
+							"_type": "block",
+							"style": "normal",
+							"_key": "n10",
+							"children": [
+								{
+									"_type": "span",
+									"_key": "n11",
+									"text": "The recorded plat and the working plat disagree by about forty feet along the creek. Nobody in the office thinks this is unusual."
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"id": "note-2",
+				"slug": "interviewed-badly-before",
+				"status": "published",
+				"data": {
+					"title": "Notes on interviewing people who have been interviewed badly before",
+					"note_date": "2026-08-11T09:00:00.000Z",
+					"content": [
+						{
+							"_type": "block",
+							"style": "normal",
+							"_key": "n20",
+							"children": [
+								{
+									"_type": "span",
+									"_key": "n21",
+									"text": "Say what the piece is for, say who else is in it, and say what you will do if they change their mind. Then wait."
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"id": "note-3",
+				"slug": "route-from-memory",
+				"status": "published",
+				"data": {
+					"title": "Nineteen years of the same route, drawn from memory by four different runners",
+					"note_date": "2026-07-29T09:00:00.000Z",
+					"content": [
+						{
+							"_type": "block",
+							"style": "normal",
+							"_key": "n30",
+							"children": [
+								{
+									"_type": "span",
+									"_key": "n31",
+									"text": "All four agree on the hill and none agree on the turnaround. The disagreement is the interesting part."
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"id": "note-4",
+				"slug": "tape-hiss-as-consent",
+				"status": "published",
+				"data": {
+					"title": "On tape hiss as a form of consent",
+					"note_date": "2026-07-06T09:00:00.000Z",
+					"content": [
+						{
+							"_type": "block",
+							"style": "normal",
+							"_key": "n40",
+							"children": [
+								{
+									"_type": "span",
+									"_key": "n41",
+									"text": "A recording that sounds like a room is a recording someone agreed to sit in. Clean audio hides the negotiation."
+								}
+							]
 						}
 					]
 				}
@@ -178,54 +557,175 @@
 		],
 		"posts": [
 			{
-				"id": "post-1",
-				"slug": "welcome",
+				"id": "post-fence-line",
+				"slug": "the-fence-line",
 				"status": "published",
 				"data": {
-					"title": "Welcome",
-					"excerpt": "Your first post. Replace this with your own content.",
+					"title": "The Fence Line",
+					"kicker": "i · field report · 9,400 words · the valley",
+					"published_on": "2026-03-01T09:00:00.000Z",
+					"excerpt": "A ranching family and a land trust spend nine years arguing over four hundred acres neither of them can quite prove they belong to. The deed is not the story. The story is the road they both need to use.",
 					"content": [
 						{
 							"_type": "block",
 							"style": "normal",
+							"_key": "p10",
 							"children": [
 								{
 									"_type": "span",
-									"text": "This is a starter post. The templates in this project show the basic patterns for querying and rendering EmDash content. Replace them with your own design.",
-									"_key": "k1"
+									"_key": "p11",
+									"text": "The road runs north from the cattle guard for a mile and a half before it forks, and both forks are on the disputed ground. Everyone uses it. Nobody will say out loud who owns it, because saying it out loud is how the last round started."
 								}
-							],
-							"_key": "k0"
+							]
 						},
 						{
 							"_type": "block",
 							"style": "h2",
+							"_key": "p12",
 							"children": [
-								{
-									"_type": "span",
-									"text": "What to do next",
-									"_key": "k3"
-								}
-							],
-							"_key": "k2"
+								{ "_type": "span", "_key": "p13", "text": "What the deed says" }
+							]
 						},
 						{
 							"_type": "block",
 							"style": "normal",
+							"_key": "p14",
 							"children": [
 								{
 									"_type": "span",
-									"text": "Open the admin panel to add content, or edit the Astro pages in src/pages to change how content is displayed.",
-									"_key": "k5"
+									"_key": "p15",
+									"text": "The 1911 conveyance describes the eastern boundary as running \"to the creek, thence along the same.\" The creek has moved twice since then."
 								}
-							],
-							"_key": "k4"
+							]
 						}
 					]
 				},
 				"taxonomies": {
-					"category": ["general"],
-					"tag": ["starter", "example"]
+					"category": ["field-report"],
+					"tag": ["land", "the-valley"]
+				}
+			},
+			{
+				"id": "post-nobody-leaves",
+				"slug": "nobody-leaves-quietly",
+				"status": "published",
+				"data": {
+					"title": "Nobody Leaves Quietly",
+					"kicker": "ii · oral history · fourteen months · six counties",
+					"published_on": "2024-06-12T09:00:00.000Z",
+					"excerpt": "Twenty-three queer people who stayed in the county they were born in. What they built instead of leaving: a supper club, a phone tree, two churches, one very small bar with no sign on it.",
+					"content": [
+						{
+							"_type": "block",
+							"style": "normal",
+							"_key": "p20",
+							"children": [
+								{
+									"_type": "span",
+									"_key": "p21",
+									"text": "The bar has no sign because a sign would be a claim, and a claim would need defending. Everybody who needs to find it has been told where it is by someone who was told where it is."
+								}
+							]
+						},
+						{
+							"_type": "block",
+							"style": "normal",
+							"_key": "p22",
+							"children": [
+								{
+									"_type": "span",
+									"_key": "p23",
+									"text": "The phone tree is older than the bar. It started as a way to move people to a safe house and became, over about fifteen years, a way to organise casseroles."
+								}
+							]
+						}
+					]
+				},
+				"taxonomies": {
+					"category": ["oral-history"],
+					"tag": ["kinship", "the-valley"]
+				}
+			},
+			{
+				"id": "post-five-am",
+				"slug": "the-five-am-congregation",
+				"status": "published",
+				"data": {
+					"title": "The Five A.M. Congregation",
+					"kicker": "iii · essay · 6,100 words · one parking lot",
+					"published_on": "2021-11-04T09:00:00.000Z",
+					"excerpt": "A run club that has met every Tuesday for nineteen years, through two deaths and one divorce that split the route in half. On ritual, attendance, and why the fast people wait at the top of the hill.",
+					"content": [
+						{
+							"_type": "block",
+							"style": "normal",
+							"_key": "p30",
+							"children": [
+								{
+									"_type": "span",
+									"_key": "p31",
+									"text": "The waiting is the whole thing. Nobody has ever proposed it as a rule. The fast people get to the top of the hill, they turn around, and they stand there in the dark until the last person arrives."
+								}
+							]
+						},
+						{
+							"_type": "block",
+							"style": "normal",
+							"_key": "p32",
+							"children": [
+								{
+									"_type": "span",
+									"_key": "p33",
+									"text": "In nineteen years the route has changed once, and it changed because two people who used to run it together stopped being able to."
+								}
+							]
+						}
+					]
+				},
+				"taxonomies": {
+					"category": ["essay"],
+					"tag": ["devotion", "kinship"]
+				}
+			},
+			{
+				"id": "post-static-devotion",
+				"slug": "static-devotion",
+				"status": "published",
+				"data": {
+					"title": "Static Devotion",
+					"kicker": "iv · criticism · a series in five parts",
+					"published_on": "2019-09-20T09:00:00.000Z",
+					"excerpt": "Five records made by people who were not trying to be heard, and what happened when they were. An argument about tape hiss, regional accents, and the difference between obscurity and privacy.",
+					"content": [
+						{
+							"_type": "block",
+							"style": "normal",
+							"_key": "p40",
+							"children": [
+								{
+									"_type": "span",
+									"_key": "p41",
+									"text": "Obscurity is a fact about an audience. Privacy is a decision made by a person. The reissue industry has spent thirty years treating the second as though it were the first."
+								}
+							]
+						},
+						{
+							"_type": "block",
+							"style": "normal",
+							"_key": "p42",
+							"children": [
+								{
+									"_type": "span",
+									"_key": "p43",
+									"text": "All five of these records were made in rooms. You can hear the rooms. That is not a defect to be cleaned up in the transfer."
+								}
+							]
+						}
+					]
+				},
+				"taxonomies": {
+					"category": ["criticism"],
+					"tag": ["devotion"]
 				}
 			}
 		]

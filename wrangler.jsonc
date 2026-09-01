@@ -1,29 +1,47 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "fuzzy-bear",
+	"name": "faustinajohnson-com",
 	"main": "./src/worker.ts",
 	"compatibility_date": "2026-02-24",
-	"compatibility_flags": ["nodejs_compat"],
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
 	"d1_databases": [
 		{
 			"binding": "DB",
-			"database_name": "fuzzy-bear",
+			"database_name": "faustinajohnson-com",
+			"database_id": "dbe32257-488c-48b6-9305-d97e6be4f4a5",
 		},
 	],
 	"r2_buckets": [
 		{
 			"binding": "MEDIA",
-			"bucket_name": "fuzzy-bear-media",
+			"bucket_name": "faustinajohnson-com-media",
 		},
 	],
+	"kv_namespaces": [
+		{
+			"binding": "SESSION",
+			"id": "b60b7d5cbcf54974989317b2d864e66c",
+		},
+	],
+	// Cloudflare Images powers astro:assets transforms. The adapter's default
+	// imageService is "cloudflare-binding", which looks for this binding.
+	// Account-level service -- nothing to create, just declare it.
+	"images": {
+		"binding": "IMAGES",
+	},
 	// Worker Loader for plugin sandboxing
 	"worker_loaders": [
 		{
 			"binding": "LOADER",
 		},
 	],
-	// General maintenance plus the bounded Media Usage lane (see src/worker.ts)
+	// General maintenance. Media usage tracking has no trigger: since emdash
+	// 0.36.0 it advances only while Settings -> Media usage tracking is open.
 	"triggers": {
-		"crons": ["* * * * *", "*/2 * * * *"],
+		"crons": [
+			"* * * * *"
+		],
 	},
 }

@@ -81,6 +81,12 @@ What EmDash controls is what happens after that:
 An identity whose email already belongs to a user lands on that account,
 passkey history and all.
 
+`defaultRole` is currently 50, so the first Access login lands as an admin
+whether or not it matches an existing account. Lowering it is safe only once
+a login has confirmed which account the Access identity resolves to: an
+identity provisioned below admin cannot promote itself, and passkeys are not
+available to fall back on.
+
 ## Adding people
 
 Add them to the Access policy. On their first visit they are provisioned at

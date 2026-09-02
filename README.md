@@ -46,8 +46,10 @@ Other scripts: `pnpm build`, `pnpm build:local`, `pnpm preview`, `pnpm typecheck
 
 The deployed admin sits behind Cloudflare Access, so signing in at the edge is
 the only sign-in. It needs `CF_ACCESS_TEAM_DOMAIN` and `CF_ACCESS_AUD` in
-`.env` (see `.env.example`) and an Access application scoped to the
-`_emdash/admin` path. Locally, `pnpm build:local` swaps back to passkeys so the
+`.env` (see `.env.example`) and one Access application over the site. While the
+whole site is private that application covers the bare hostname; when the site
+opens up, narrowing it to the `_emdash/admin` path leaves the admin gated and
+its AUD unchanged. Locally, `pnpm build:local` swaps back to passkeys so the
 admin is reachable without an Access JWT.
 
 Full setup, the identity and role model, and how to add people are in

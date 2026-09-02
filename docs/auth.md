@@ -27,20 +27,37 @@ wrong login.
 
 ## The Access application
 
-Create a self-hosted application scoped to the admin path:
+Use one application, and change its destination when the site's privacy
+changes. The AUD tag belongs to the application and survives edits to its
+destinations, so widening or narrowing the reach of the login needs no change
+to `.env` and no redeploy.
+
+While the whole site is private:
+
+```
+Domain: faustinajohnson.com          (no path)
+```
+
+Every request to the site, admin or not, then carries an Access JWT. Public
+pages ignore it -- EmDash only runs the Access check on `/_emdash` routes that
+are not public -- so the admin is identified throughout, and nothing has to
+change on the day the site opens up.
+
+When the site goes public, narrow that same application to the admin path:
 
 ```
 Domain: faustinajohnson.com    Path: _emdash/admin
 ```
 
-The path matters once the site is public. Two `/_emdash` routes are served to
+The path matters from that point on. Two `/_emdash` routes are served to
 anonymous visitors: images come from `/_emdash/api/media/file/...` and the
 search box on `/posts` calls `/_emdash/api/search`. EmDash treats both as
-public routes, so an Access application covering all of `/_emdash` — or the
-whole hostname — puts a login wall in front of the portfolio's own images.
+public routes, so an application still covering all of `/_emdash` -- or the
+whole hostname -- would put a login wall in front of the portfolio's own
+images.
 
-Add `faustinajohnson-com.workers.dev` as a second application with the same
-path to gate the workers.dev URL too.
+Check the AUD on the application's Overview tab after any such edit. It should
+be unchanged; if it ever is not, update `.env` and redeploy.
 
 ### Why the rest of /_emdash needs no application
 
@@ -54,12 +71,36 @@ cookie and gets a 401.
 The Access application's job is to issue the JWT and to give the login
 redirect somewhere to land. Enforcement everywhere else is EmDash's.
 
+### Do not run two applications on this hostname
+
+An application covering the whole site and a second one covering
+`_emdash/admin` overlap, and the two mint JWTs with different AUD tags for the
+same hostname. EmDash checks the JWT against the single `CF_ACCESS_AUD` it was
+built with, so whichever application wrote the `CF_Authorization` cookie last
+decides whether the admin works. The symptom is specific: the admin page loads
+-- that request carries the header from the application whose path matched --
+but every fetch to `/_emdash/api/...` comes back 401, because those fall back
+to the cookie.
+
+`wrangler tail` shows it as `[external-auth] Auth error:` with a JWT audience
+mismatch. If you need different policies for the public site and the admin,
+the site-wide application is the one to retire.
+
+To gate `faustinajohnson-com.workers.dev` as well, add it as another
+destination on the same application rather than as a second application.
+
 ## Who gets in, and as what
 
 Admission is the Access policy's decision. A valid JWT is enough to be let in,
 and if no user matches the identity's email, EmDash creates one on the spot.
 Keep the Access policy as narrow as the list of people who should be able to
 edit the site.
+
+While one site-wide application is doing both jobs, that policy is also the
+list of people who can read the private site -- and with `defaultRole` at 50,
+every one of them becomes an EmDash admin the moment they open the admin URL.
+Either keep the reader list and the editor list the same until the site goes
+public, or lower `defaultRole` first.
 
 What EmDash controls is what happens after that:
 

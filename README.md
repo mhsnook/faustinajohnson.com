@@ -40,7 +40,18 @@ The site runs at http://localhost:4321 and the admin UI at
 http://localhost:4321/_emdash/admin. On first run EmDash creates the local
 database and loads `seed/seed.json`.
 
-Other scripts: `pnpm build`, `pnpm preview`, `pnpm typecheck`.
+Other scripts: `pnpm build`, `pnpm build:local`, `pnpm preview`, `pnpm typecheck`.
+
+## Admin access
+
+The deployed admin sits behind Cloudflare Access, so signing in at the edge is
+the only sign-in. It needs `CF_ACCESS_TEAM_DOMAIN` and `CF_ACCESS_AUD` in
+`.env` (see `.env.example`) and an Access application scoped to the
+`_emdash/admin` path. Locally, `pnpm build:local` swaps back to passkeys so the
+admin is reachable without an Access JWT.
+
+Full setup, the identity and role model, and how to add people are in
+[docs/auth.md](docs/auth.md).
 
 ## Deploying
 

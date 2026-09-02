@@ -143,6 +143,21 @@ Dev runs against local miniflare state. `wrangler deploy` targets the real D1 an
 R2 by name. Adding `"remote": true` to a binding points dev at the live resource --
 useful for debugging production data, but it means seeding writes to production.
 
+## Custom domains are not in wrangler.jsonc
+
+`wrangler deploy` does not read this project's `wrangler.jsonc` directly. The
+Cloudflare Vite plugin writes `.wrangler/deploy/config.json`, which redirects
+wrangler to a generated `dist/server/wrangler.json`. That generated file carries
+bindings, vars, triggers and `account_id`, but **drops `routes` and
+`workers_dev`** -- so adding routes here does nothing and `wrangler deploy` still
+exits 0. It is a silent no-op, not an error.
+
+`faustinajohnson.com` and `www` are attached to the Worker itself (Workers ->
+Settings -> Domains & Routes), which is where Cloudflare keeps custom domains
+anyway: they persist across deploys and do not need to be redeclared. Change
+them there, not here.
+
+
 ## This Site
 
 Faustina Johnson's writer portfolio. The design was imported from the Claude Design

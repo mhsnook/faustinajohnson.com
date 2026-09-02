@@ -1,28 +1,24 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "faustinajohnson-com",
+	// This token can see more than one account; name the one that owns the
+	// worker, the domain, and the bindings below.
+	"account_id": "c9d80e4dec35727da326297ef5b88f04",
 	"main": "./src/worker.ts",
 	"compatibility_date": "2026-02-24",
-	"compatibility_flags": [
-		"nodejs_compat"
-	],
-	"d1_databases": [
+	// Canonical origin for outbound links. EmDash resolves these as
+	// EMDASH_SITE_URL -> stored `emdash:site_url` -> request URL, and the stored
+	// value is written once at setup: running setup on the workers.dev URL is
+	// what made magic links point there. Pinning it here outranks the store.
+	"vars": {
+		"EMDASH_SITE_URL": "https://faustinajohnson.com",
+	},
+	// Cloudflare Email Sending, for magic-link login and recovery mail. The
+	// sender subdomain mail.faustinajohnson.com is onboarded with SPF, DKIM and
+	// DMARC; the apex is deliberately left free for other mail providers.
+	"send_email": [
 		{
-			"binding": "DB",
-			"database_name": "faustinajohnson-com",
-			"database_id": "dbe32257-488c-48b6-9305-d97e6be4f4a5",
-		},
-	],
-	"r2_buckets": [
-		{
-			"binding": "MEDIA",
-			"bucket_name": "faustinajohnson-com-media",
-		},
-	],
-	"kv_namespaces": [
-		{
-			"binding": "SESSION",
-			"id": "b60b7d5cbcf54974989317b2d864e66c",
+			"name": "EMAIL",
 		},
 	],
 	// Cloudflare Images powers astro:assets transforms. The adapter's default

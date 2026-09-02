@@ -6,6 +6,7 @@ import NoteList from "../components/NoteList.astro";
 import PieceCard from "../components/PieceCard.astro";
 import SectionHead from "../components/SectionHead.astro";
 import Base from "../layouts/Base.astro";
+import { yearOf } from "../utils/dates";
 import { AUTHOR_PORTRAIT, resolveStarterSiteIdentity } from "../utils/site-identity";
 
 // Nothing here depends on anything else here, so it all goes out at once
@@ -50,11 +51,15 @@ const COUNT_WORDS = ["No", "One", "Two", "Three", "Four"];
 const workHeading = `${COUNT_WORDS[pieces.length]} ${pieces.length === 1 ? "Piece" : "Pieces"}`;
 
 const years = pieces
-	.map((piece) => new Date(piece.data.published_on).getFullYear())
-	.filter((year) => !Number.isNaN(year));
+	.map((piece) => yearOf(piece.data.published_on))
+	.filter((year) => year !== null);
 const [firstYear, lastYear] = [Math.min(...years), Math.max(...years)];
 const yearRange =
-	years.length === 0 ? null : firstYear === lastYear ? `${firstYear}` : `${firstYear} — ${lastYear}`;
+	years.length === 0
+		? null
+		: firstYear === lastYear
+			? `${firstYear}`
+			: `${firstYear} — ${lastYear}`;
 ---
 
 <Base
@@ -283,6 +288,4 @@ const yearRange =
 	.method__quote :global(blockquote p) {
 		margin: 0;
 	}
-
-
 </style>

@@ -3,20 +3,23 @@ This is an EmDash site -- a CMS built on Astro with a full admin UI.
 ## Commands
 
 ```bash
-pnpm build && pnpm preview   # Run the site -- see "Use astro preview" below
-npx emdash types             # Regenerate TypeScript types from a running site
+pnpm build && pnpm preview         # Run the site -- see "Use astro preview" below
+pnpm build:local && pnpm preview   # Same, with a reachable admin UI
+npx emdash types                   # Regenerate TypeScript types from a running site
 
-pnpm typecheck               # astro check
-pnpm lint                    # oxlint            (--fix available as lint:fix)
-pnpm format                  # oxfmt + prettier  (format:check to check only)
-pnpm test                    # vitest run        (test:watch to watch)
+pnpm typecheck                     # astro check
+pnpm lint                          # oxlint            (--fix available as lint:fix)
+pnpm format                        # oxfmt + prettier  (format:check to check only)
+pnpm test                          # vitest run        (test:watch to watch)
 ```
 
 `pnpm dev` starts, serves one request, and then wedges. Use `pnpm preview`.
 
-The admin UI is at `http://localhost:4321/_emdash/admin`. In development,
-`/_emdash/api/setup/dev-bypass?redirect=/_emdash/admin` signs you in as an admin
-without a passkey.
+The admin UI is at `http://localhost:4321/_emdash/admin`, and reaching it locally
+takes `pnpm build:local` -- a plain `pnpm build` expects a Cloudflare Access JWT
+that a local preview never has. See "Admin login: Cloudflare Access" below.
+Under `build:local`, `/_emdash/api/setup/dev-bypass?redirect=/_emdash/admin`
+signs you in as an admin without a passkey.
 
 ### Use `astro preview`, not `astro dev`
 
@@ -35,8 +38,8 @@ D1, same bindings:
 So the working loop is a rebuild, which costs about ten seconds:
 
 ```bash
-pnpm build && pnpm preview          # localhost:4321
-pnpm build && pnpm preview --host   # also on the LAN
+pnpm build:local && pnpm preview          # localhost:4321
+pnpm build:local && pnpm preview --host   # also on the LAN
 ```
 
 There is no HMR. Rebuild to see a change.
@@ -75,7 +78,7 @@ is dev-only. `astro dev` reliably serves exactly one request, which is enough:
 npx astro dev
 curl -L "http://127.0.0.1:4321/_emdash/api/setup/dev-bypass?redirect=/_emdash/admin"
 npx astro dev stop
-pnpm build && npx astro preview --host 0.0.0.0
+pnpm build:local && npx astro preview --host 0.0.0.0
 ```
 
 ### Run only one dev server
@@ -180,6 +183,80 @@ This template ships with `.mcp.json`, `.cursor/mcp.json`, and `.vscode/mcp.json`
 - Taxonomy names in queries must match the seed's `"name"` field exactly (e.g., `"category"` not `"categories"`).
 - `pnpm-workspace.yaml` sets `better-sqlite3: false`, so `npx emdash seed` cannot open a database. Seed by starting the dev server, which applies `seed/seed.json` and regenerates `emdash-env.d.ts`. Do not flip that flag -- it is a deliberate supply-chain setting.
 - Custom design tokens go in `theme.css` as global classes; per-page layout goes in that page's scoped `<style>` block.
+
+## Admin login: Cloudflare Access
+
+`astro.config.mjs` passes `auth: access({ ... })` to `emdash()`, which switches
+EmDash from passkeys to a Cloudflare Access identity. Access authenticates at
+the edge, EmDash verifies the same JWT on every `/_emdash` request, and there is
+no second login.
+
+The two values come from the environment at build time and are baked into the
+worker bundle. Copy `.env.example` to `.env` and fill them in:
+
+| Variable                 | Where to find it                                                             |
+| ------------------------ | ---------------------------------------------------------------------------- |
+| `CF_ACCESS_TEAM_DOMAIN`  | Zero Trust -> Settings -> Custom Pages, e.g. `yourteam.cloudflareaccess.com` |
+| `CF_ACCESS_AUD`          | Zero Trust -> Access -> Applications -> the app -> Application Audience Tag  |
+
+Neither is a secret. The AUD tag is a public identifier; the JWT signature,
+checked against `https://<team>/cdn-cgi/access/certs`, is what proves anything.
+They live in `.env` rather than in the config file only because they differ per
+account.
+
+`pnpm build` refuses to run without them. `pnpm build:local` sets
+`EMDASH_LOCAL_AUTH=1` instead, which drops `auth` from the config and restores
+passkeys plus the dev-bypass endpoint -- the Access JWT never reaches
+`astro preview`, so without this the local admin is unreachable.
+
+### Scope the Access application to /_emdash/admin
+
+This is the part that is easy to get wrong. Create a **self-hosted** Access
+application whose path is `_emdash/admin`, not the bare hostname:
+
+```
+Domain: faustinajohnson.com    Path: _emdash/admin
+```
+
+Fronting the whole hostname would put a login wall in front of the portfolio.
+Fronting all of `/_emdash` would break the public site more subtly: images are
+served from `/_emdash/api/media/file/...` and the search box on `/posts` calls
+`/_emdash/api/search`, both of which EmDash treats as public routes.
+
+The rest of `/_emdash/api` still needs no Access application. Access sets the
+`CF_Authorization` cookie for the whole hostname, so the admin UI's own fetches
+carry it, and EmDash reads the JWT from that cookie when the
+`Cf-Access-Jwt-Assertion` header is absent. An anonymous request to a private
+API route arrives with neither and gets a 401.
+
+Add `faustinajohnson-com.workers.dev` as a second app with the same path if the
+workers.dev URL should be gated too.
+
+### Identity and roles
+
+EmDash matches the Access identity to a user by email. Log in with the email
+already on the admin account and it is the same account, passkey history and
+all. A new email is provisioned on the spot, and `defaultRole: 50` makes it an
+admin -- which means the Access policy is the only thing deciding who can edit
+the site. Keep that policy narrow.
+
+The role is set once, at provisioning. There is no `syncRoles` here, so
+changing a user's role in the EmDash admin sticks.
+
+### The CLI
+
+`emdash login` detects the Access redirect and reaches for `cloudflared access
+login <url>` for a browser flow, or a cached token from `cloudflared access
+token`. For unattended use, create an Access service token and pass it through:
+
+```bash
+emdash login --url https://faustinajohnson.com \
+  --header "CF-Access-Client-Id: ..." \
+  --header "CF-Access-Client-Secret: ..."
+```
+
+API tokens are checked before Access on every `/_emdash` request, so an existing
+bearer token keeps working untouched.
 
 ## Cloudflare bindings
 

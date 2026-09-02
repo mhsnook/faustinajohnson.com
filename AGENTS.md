@@ -5,6 +5,11 @@ This is an EmDash site -- a CMS built on Astro with a full admin UI.
 ```bash
 pnpm build && pnpm preview   # Run the site -- see "Use astro preview" below
 npx emdash types             # Regenerate TypeScript types from a running site
+
+pnpm typecheck               # astro check
+pnpm lint                    # oxlint            (--fix available as lint:fix)
+pnpm format                  # oxfmt + prettier  (format:check to check only)
+pnpm test                    # vitest run        (test:watch to watch)
 ```
 
 `pnpm dev` starts, serves one request, and then wedges. Use `pnpm preview`.
@@ -83,6 +88,61 @@ not available` means one is already running:
 ss -ltnp | grep -E ':(4321|9229)'
 npx astro dev status && npx astro preview status
 ```
+
+## Checks
+
+`.github/workflows/pr-checks.yml` runs on every PR into `main`. It reports what
+the PR **changed** rather than whether the repo is clean: new vs resolved type
+errors, new vs resolved lint findings, formatter drift, Worker and client bundle
+size, and the test run. It posts one comment and edits that same comment on each
+push.
+
+The shape is one job per **tree**, not one per check. `head` and `base` each
+install once and build once, in parallel, then run every check that tree can
+answer. `report` fans in, diffs the two, comments, and decides pass or fail.
+Two installs and two builds, whatever the number of checks.
+
+What blocks a merge lives in one object, `POLICY` in `.github/ci/gate.cjs`:
+
+| Check     | Rule            | Why                                                        |
+| --------- | --------------- | ---------------------------------------------------------- |
+| typecheck | `no-new`        | starts at 0 errors, so the gate is usable from day one     |
+| lint      | `no-new`        | starts at 0 findings                                       |
+| tests     | `no-new`        | any failure blocks                                         |
+| format    | `touched-clean` | a file you edited ships formatted; files you did not are not your problem |
+| bundle    | byte budgets    | worker +250 kB, client +100 kB gzipped, plus the hard limit |
+
+The Worker has a real ceiling: Cloudflare refuses a deploy over **10 MB
+gzipped** on Workers Paid. It currently sits at about 2.9 MB, and the gate fails
+at the limit whatever the delta.
+
+### Two formatters, and one trap
+
+oxfmt cannot parse `.astro` ([oxc#19715]), so Prettier with
+`prettier-plugin-astro` formats the 24 `.astro` files and oxfmt formats
+everything else. `.prettierignore` is what keeps them apart -- it ignores
+everything except `.astro`.
+
+That file is also the trap. **oxfmt reads `.prettierignore` by default**, so
+without an explicit `--ignore-path .gitignore` it inherits "ignore everything
+but `.astro`", formats nothing, reports no drift, and the check passes forever.
+Both `package.json` and `.github/ci/collect-static.sh` pass that flag. Keep it.
+
+Prettier only reaches the frontmatter and `<style>` blocks of an `.astro` file
+plus its markup; Biome was the alternative and formats the frontmatter only.
+
+[oxc#19715]: https://github.com/oxc-project/oxc/issues/19715
+
+### Pre-existing drift
+
+`seed/seed.json`, `src/styles/theme.css` and `wrangler.jsonc` are unformatted
+and deliberately left that way -- reformatting them is a large diff with no
+reader. They clear whenever someone edits them. Markdown is excluded outright
+(`**/*.md`): the prose here is hand-wrapped, and oxfmt rewrites list
+continuations in it.
+
+`.agents/` and `.github/ci/` are excluded from both the linter and the
+formatter, and `emdash-env.d.ts` and `worker-configuration.d.ts` are generated.
 
 ## Key Files
 

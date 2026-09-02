@@ -1,0 +1,12 @@
+{
+	"useTabs": true,
+	"printWidth": 100,
+	"ignorePatterns": [
+		".agents/**",
+		".claude/**",
+		".github/ci/**",
+		"**/*.md",
+		"emdash-env.d.ts",
+		"worker-configuration.d.ts"
+	]
+}

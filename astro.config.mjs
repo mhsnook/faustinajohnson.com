@@ -13,21 +13,22 @@ try {
 	// No .env; the variables may still come from the shell.
 }
 
-// Cloudflare Access fronts /_emdash/admin, and EmDash verifies the Access JWT
-// on every /_emdash request, so the admin needs no second login. Passkey auth
-// is off whenever `auth` is set, and the Access JWT never reaches a local
-// build -- so EMDASH_LOCAL_AUTH=1 swaps back to passkey for `astro preview`.
+// Cloudflare Access authenticates at the edge and EmDash verifies the same JWT
+// on every /_emdash request, so the admin needs no second login. Setting `auth`
+// disables passkeys, and the Access JWT never reaches a local build -- hence
+// EMDASH_LOCAL_AUTH=1. Retire that flag once emdash gates its passkey fallback
+// on something other than `import.meta.env.DEV`, which a preview build is not.
 const localAuth = process.env.EMDASH_LOCAL_AUTH === "1";
-const accessTeamDomain = process.env.CF_ACCESS_TEAM_DOMAIN;
-const accessAudience = process.env.CF_ACCESS_AUD;
+const { CF_ACCESS_TEAM_DOMAIN: teamDomain, CF_ACCESS_AUD: audience } = process.env;
+const accessConfigured = Boolean(teamDomain && audience);
 
 const accessAuth =
-	!localAuth && accessTeamDomain && accessAudience
+	!localAuth && accessConfigured
 		? access({
-				teamDomain: accessTeamDomain,
-				audience: accessAudience,
-				// Everyone the Access policy admits lands here as an EmDash admin.
-				// Narrow who gets in from the Access policy, not from this number.
+				teamDomain,
+				audience,
+				// New identities are provisioned at this level. Lowering it is a
+				// one-way door: nobody below Admin can raise themselves back.
 				defaultRole: 50,
 			})
 		: undefined;
@@ -39,7 +40,7 @@ const requireAccessOnBuild = {
 	name: "require-cloudflare-access",
 	hooks: {
 		"astro:build:start": () => {
-			if (accessAuth || localAuth) return;
+			if (localAuth || accessConfigured) return;
 			throw new Error(
 				"Cloudflare Access is the admin login for this site, so a build needs " +
 					"CF_ACCESS_TEAM_DOMAIN and CF_ACCESS_AUD (see .env.example). " +

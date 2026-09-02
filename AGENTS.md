@@ -16,10 +16,9 @@ pnpm test                          # vitest run        (test:watch to watch)
 `pnpm dev` starts, serves one request, and then wedges. Use `pnpm preview`.
 
 The admin UI is at `http://localhost:4321/_emdash/admin`, and reaching it locally
-takes `pnpm build:local` -- a plain `pnpm build` expects a Cloudflare Access JWT
-that a local preview never has. See "Admin login: Cloudflare Access" below.
-Under `build:local`, `/_emdash/api/setup/dev-bypass?redirect=/_emdash/admin`
-signs you in as an admin without a passkey.
+takes `pnpm build:local` -- see "Admin login" below. Under `build:local`,
+`/_emdash/api/setup/dev-bypass?redirect=/_emdash/admin` signs you in as an admin
+without a passkey.
 
 ### Use `astro preview`, not `astro dev`
 
@@ -192,11 +191,10 @@ and `CF_ACCESS_AUD` from `.env` at build time and baking them into the worker.
 `pnpm build` refuses to run without them.
 
 `pnpm build:local` sets `EMDASH_LOCAL_AUTH=1`, which drops `auth` from the
-config and restores passkeys plus the dev-bypass endpoint. That is the only way
-to reach the admin under `astro preview`, since the Access JWT never gets there.
+config and restores passkeys plus the dev-bypass endpoint.
 
-Setting up the Access application, its path scoping, the identity and role
-model, and how people are added are all in [docs/auth.md](docs/auth.md).
+Setting up the Access application, the role model, and how people are added
+are in [docs/auth.md](docs/auth.md).
 
 ## Cloudflare bindings
 
@@ -330,3 +328,5 @@ The masthead flicker in particular must stay behind that guard.
 - Don't add a fifth animation without a reduced-motion fallback.
 - Don't reach for custom site settings -- EmDash has no such extension point. Use a
   widget area or a `pages` entry.
+- Don't set `autoProvision: false` on `access()`. Nothing else in EmDash creates a
+  user row, so it locks out everyone who isn't already in the database.

@@ -43,7 +43,7 @@ pnpm build:local && pnpm preview --host   # also on the LAN
 
 There is no HMR. Rebuild to see a change.
 
-### The upstream bug
+### HMR not working
 
 Tracked as [#3](https://github.com/mhsnook/faustinajohnson.com/issues/3) -- close
 that when the dev loop can go back to HMR.

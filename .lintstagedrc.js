@@ -1,5 +1,4 @@
-// `pnpm format` runs this: each staged file goes to whichever formatter owns
-// it. The repo-wide pass is `pnpm format:all`.
+// Using lint-staged to trigger the formatters.
 export default {
 	"*.astro": "prettier --write",
 	"*.{js,jsx,ts,tsx,mjs,cjs,json,jsonc,css}":

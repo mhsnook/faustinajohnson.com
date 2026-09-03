@@ -193,6 +193,10 @@ and `CF_ACCESS_AUD` from `.env` at build time and baking them into the worker.
 `pnpm build:local` sets `EMDASH_LOCAL_AUTH=1`, which drops `auth` from the
 config and restores passkeys plus the dev-bypass endpoint.
 
+On Cloudflare Workers Builds both variables belong under Settings -> Build ->
+Build variables and secrets. The runtime list, Settings -> Variables and
+Secrets, is a separate set that the build container never sees.
+
 Setting up the Access application, the role model, and how people are added
 are in [docs/auth.md](docs/auth.md).
 

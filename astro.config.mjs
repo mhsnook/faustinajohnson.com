@@ -44,6 +44,9 @@ const requireAccessOnBuild = {
 			throw new Error(
 				"Cloudflare Access is the admin login for this site, so a build needs " +
 					"CF_ACCESS_TEAM_DOMAIN and CF_ACCESS_AUD (see .env.example). " +
+					"On Cloudflare Workers Builds these belong in Settings -> Build -> " +
+					"Build variables and secrets; the runtime list under Settings -> " +
+					"Variables and Secrets is not read during a build. " +
 					"For a local build with passkey login instead: pnpm build:local",
 			);
 		},

@@ -19,6 +19,21 @@ them in:
 
 Neither is a secret. `pnpm build` refuses to run without them.
 
+## On Cloudflare Workers Builds
+
+Workers keeps two separate lists of variables, and only one of them reaches a
+build:
+
+| Dashboard location                                 | Reaches             |
+| -------------------------------------------------- | ------------------- |
+| Settings → Build → Build variables and secrets     | the build container |
+| Settings → Variables and Secrets                   | the deployed Worker |
+
+Both values are read while the Worker is being built, so they go in the first
+list. Setting them in the second one leaves the build failing on the
+`require-cloudflare-access` hook, because `access()` bakes them into the bundle
+at config time and nothing looks them up again at runtime.
+
 ## The Access application
 
 One self-hosted application over the site, and its destination decides how much

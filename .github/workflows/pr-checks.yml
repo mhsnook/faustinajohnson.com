@@ -19,6 +19,9 @@ concurrency:
 
 env:
   NODE_VERSION: "26"
+  # astro.config.mjs refuses to build without these
+  CF_ACCESS_TEAM_DOMAIN: ci-placeholder.cloudflareaccess.com
+  CF_ACCESS_AUD: ci-placeholder
 
 jobs:
   # ── The PR's tree ─────────────────────────────────────────────────────

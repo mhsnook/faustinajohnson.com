@@ -3,18 +3,20 @@ This is an EmDash site -- a CMS built on Astro with a full admin UI.
 ## Commands
 
 ```bash
-pnpm build && pnpm preview   # Run the site -- see "Use astro preview" below
-npx emdash types             # Regenerate TypeScript types from a running site
+pnpm build && pnpm preview         # Run the site -- see "Use astro preview" below
+pnpm build:local && pnpm preview   # Same, with a reachable admin UI
+npx emdash types                   # Regenerate TypeScript types from a running site
 
-pnpm typecheck               # astro check
-pnpm lint                    # oxlint            (--fix available as lint:fix)
-pnpm format                  # oxfmt + prettier  (format:check to check only)
-pnpm test                    # vitest run        (test:watch to watch)
+pnpm typecheck                     # astro check
+pnpm lint                          # oxlint            (--fix available as lint:fix)
+pnpm format                        # oxfmt + prettier  (format:check to check only)
+pnpm test                          # vitest run        (test:watch to watch)
 ```
 
 `pnpm dev` starts, serves one request, and then wedges. Use `pnpm preview`.
 
-The admin UI is at `http://localhost:4321/_emdash/admin`. In development,
+The admin UI is at `http://localhost:4321/_emdash/admin`, and reaching it locally
+takes `pnpm build:local` -- see "Admin login" below. Under `build:local`,
 `/_emdash/api/setup/dev-bypass?redirect=/_emdash/admin` signs you in as an admin
 without a passkey.
 
@@ -35,8 +37,8 @@ D1, same bindings:
 So the working loop is a rebuild, which costs about ten seconds:
 
 ```bash
-pnpm build && pnpm preview          # localhost:4321
-pnpm build && pnpm preview --host   # also on the LAN
+pnpm build:local && pnpm preview          # localhost:4321
+pnpm build:local && pnpm preview --host   # also on the LAN
 ```
 
 There is no HMR. Rebuild to see a change.
@@ -75,7 +77,7 @@ is dev-only. `astro dev` reliably serves exactly one request, which is enough:
 npx astro dev
 curl -L "http://127.0.0.1:4321/_emdash/api/setup/dev-bypass?redirect=/_emdash/admin"
 npx astro dev stop
-pnpm build && npx astro preview --host 0.0.0.0
+pnpm build:local && npx astro preview --host 0.0.0.0
 ```
 
 ### Run only one dev server
@@ -180,6 +182,19 @@ This template ships with `.mcp.json`, `.cursor/mcp.json`, and `.vscode/mcp.json`
 - Taxonomy names in queries must match the seed's `"name"` field exactly (e.g., `"category"` not `"categories"`).
 - `pnpm-workspace.yaml` sets `better-sqlite3: false`, so `npx emdash seed` cannot open a database. Seed by starting the dev server, which applies `seed/seed.json` and regenerates `emdash-env.d.ts`. Do not flip that flag -- it is a deliberate supply-chain setting.
 - Custom design tokens go in `theme.css` as global classes; per-page layout goes in that page's scoped `<style>` block.
+
+## Admin login
+
+The admin is behind Cloudflare Access rather than passkeys: `astro.config.mjs`
+passes `auth: access({ ... })` to `emdash()`, reading `CF_ACCESS_TEAM_DOMAIN`
+and `CF_ACCESS_AUD` from `.env` at build time and baking them into the worker.
+`pnpm build` refuses to run without them.
+
+`pnpm build:local` sets `EMDASH_LOCAL_AUTH=1`, which drops `auth` from the
+config and restores passkeys plus the dev-bypass endpoint.
+
+Setting up the Access application, the role model, and how people are added
+are in [docs/auth.md](docs/auth.md).
 
 ## Cloudflare bindings
 
@@ -313,3 +328,5 @@ The masthead flicker in particular must stay behind that guard.
 - Don't add a fifth animation without a reduced-motion fallback.
 - Don't reach for custom site settings -- EmDash has no such extension point. Use a
   widget area or a `pages` entry.
+- Don't set `autoProvision: false` on `access()`. Nothing else in EmDash creates a
+  user row, so it locks out everyone who isn't already in the database.

@@ -218,19 +218,21 @@ Dev runs against local miniflare state. `wrangler deploy` targets the real D1 an
 R2 by name. Adding `"remote": true` to a binding points dev at the live resource --
 useful for debugging production data, but it means seeding writes to production.
 
-## Custom domains are not in wrangler.jsonc
+## wrangler.jsonc reaches wrangler through a generated file
 
 `wrangler deploy` does not read this project's `wrangler.jsonc` directly. The
 Cloudflare Vite plugin writes `.wrangler/deploy/config.json`, which redirects
-wrangler to a generated `dist/server/wrangler.json`. That generated file carries
-bindings, vars, triggers and `account_id`, but **drops `routes` and
-`workers_dev`** -- so adding routes here does nothing and `wrangler deploy` still
-exits 0. It is a silent no-op, not an error.
+wrangler to a generated `dist/server/wrangler.json`. That generated file is what
+wrangler deploys, so an edit here takes effect only after a build.
 
-`faustinajohnson.com` and `www` are attached to the Worker itself (Workers ->
-Settings -> Domains & Routes), which is where Cloudflare keeps custom domains
-anyway: they persist across deploys and do not need to be redeclared. Change
-them there, not here.
+It carries `routes`, `workers_dev` and `preview_urls` through, alongside
+bindings, vars, triggers and `account_id`. The `routes` block declares
+`faustinajohnson.com` and `www` as custom domains, and a deploy prints both back
+under "Deployed triggers".
+
+Custom domains also live on the Worker itself (Workers -> Settings -> Domains &
+Routes), and both places now name the same two. Change one and change the other,
+or the next deploy should reassert the stale pair from this file.
 
 
 ## This Site

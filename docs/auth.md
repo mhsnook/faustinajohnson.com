@@ -5,8 +5,14 @@ issues a JWT; EmDash verifies it on every `/_emdash` request and matches it to
 a user by email. No second login, and passkeys are off.
 
 `astro.config.mjs` wires this up by passing `auth: access({ ... })` to
-`emdash()`, so the env vars CF_ACCESS_TEAM_DOMAIN and CF_ACCESS_AUD must be
-available to the build.
+`emdash()`, so the team domain and the AUD tag must be available to the build.
+Both are written as literals in `astro.config.mjs`, so a clone builds with no
+setup; `CF_ACCESS_TEAM_DOMAIN` and `CF_ACCESS_AUD` in the environment or in
+`.env` override them, which is how you point a build at a different Access
+application.
+
+They do not belong in `wrangler.jsonc` under `vars`. That is the worker's
+*runtime* environment, and these are read while the worker is being built.
 
 - Your team domain is one like `yourteam.cloudflareaccess.com`; find it in your
   location bar or under `Zero Trust → Settings`.

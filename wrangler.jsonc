@@ -13,8 +13,6 @@
 	// what made magic links point there. Pinning it here outranks the store.
 	"vars": {
 		"EMDASH_SITE_URL": "https://faustinajohnson.com",
-		"CF_ACCESS_AUD": "a0d488cfb2cef1984c0462c469a257d431bd14fcd736d5dc501bc0efd01e02f9",
-		"CF_ACCESS_TEAM_DOMAIN": "shy-snow-5265.cloudflareaccess.com",
 	},
 	// Cloudflare Email Sending, for magic-link login and recovery mail. The
 	// sender subdomain mail.faustinajohnson.com is onboarded with SPF, DKIM and

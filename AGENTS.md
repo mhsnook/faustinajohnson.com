@@ -143,8 +143,8 @@ whichever of the two formatters owns it:
 The pre-commit hook is husky calling `pnpm format:staged`, so a file ships
 formatted whether or not anyone remembered to run it -- the same footprint the
 `touched-clean` gate measures. Prefer it over `format:all`, which also rewrites
-everything that pre-dates the formatter (`seed/seed.json`, `src/styles/theme.css`,
-`wrangler.jsonc` and five `.astro` files) and buries your change in the diff.
+everything that pre-dates the formatter (`seed/seed.json`, `src/styles/theme.css`
+and five `.astro` files) and buries your change in the diff.
 
 ## Key Files
 
@@ -186,16 +186,21 @@ This template ships with `.mcp.json`, `.cursor/mcp.json`, and `.vscode/mcp.json`
 ## Admin login
 
 The admin is behind Cloudflare Access rather than passkeys: `astro.config.mjs`
-passes `auth: access({ ... })` to `emdash()`, reading `CF_ACCESS_TEAM_DOMAIN`
-and `CF_ACCESS_AUD` from `.env` at build time and baking them into the worker.
-`pnpm build` refuses to run without them.
+passes `auth: access({ ... })` to `emdash()`, which bakes the team domain and
+the AUD tag into the worker at build time.
 
 `pnpm build:local` sets `EMDASH_LOCAL_AUTH=1`, which drops `auth` from the
 config and restores passkeys plus the dev-bypass endpoint.
 
-On Cloudflare Workers Builds both variables belong under Settings -> Build ->
-Build variables and secrets. The runtime list, Settings -> Variables and
-Secrets, is a separate set that the build container never sees.
+Both values are literals in `astro.config.mjs`, and `CF_ACCESS_TEAM_DOMAIN` /
+`CF_ACCESS_AUD` override them from `.env` or the shell -- that is what
+`.env.example` is for. Neither is a secret, and they only ever change when the
+Access application does.
+
+They are deliberately not in `wrangler.jsonc`. `vars` there is the worker's
+runtime environment, and nothing reads these at runtime: `access()` consumes
+them while the worker is being built, and a Cloudflare build container is
+handed no `vars` at all. Putting them there is what broke two deploys.
 
 Setting up the Access application, the role model, and how people are added
 are in [docs/auth.md](docs/auth.md).

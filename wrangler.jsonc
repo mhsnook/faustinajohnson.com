@@ -6,12 +6,15 @@
 	"account_id": "c9d80e4dec35727da326297ef5b88f04",
 	"main": "./src/worker.ts",
 	"compatibility_date": "2026-02-24",
+	"compatibility_flags": ["nodejs_compat"],
 	// Canonical origin for outbound links. EmDash resolves these as
 	// EMDASH_SITE_URL -> stored `emdash:site_url` -> request URL, and the stored
 	// value is written once at setup: running setup on the workers.dev URL is
 	// what made magic links point there. Pinning it here outranks the store.
 	"vars": {
 		"EMDASH_SITE_URL": "https://faustinajohnson.com",
+		"CF_ACCESS_AUD": "a0d488cfb2cef1984c0462c469a257d431bd14fcd736d5dc501bc0efd01e02f9",
+		"CF_ACCESS_TEAM_DOMAIN": "shy-snow-5265.cloudflareaccess.com",
 	},
 	// Cloudflare Email Sending, for magic-link login and recovery mail. The
 	// sender subdomain mail.faustinajohnson.com is onboarded with SPF, DKIM and
@@ -36,8 +39,42 @@
 	// General maintenance. Media usage tracking has no trigger: since emdash
 	// 0.36.0 it advances only while Settings -> Media usage tracking is open.
 	"triggers": {
-		"crons": [
-			"* * * * *"
-		],
+		"crons": ["* * * * *"],
 	},
+	"routes": [
+		{
+			"pattern": "faustinajohnson.com",
+			"zone_name": "faustinajohnson.com",
+			"custom_domain": true,
+			"enabled": true,
+			"previews_enabled": false,
+		},
+		{
+			"pattern": "www.faustinajohnson.com",
+			"zone_name": "faustinajohnson.com",
+			"custom_domain": true,
+			"enabled": true,
+			"previews_enabled": false,
+		},
+	],
+	"workers_dev": true,
+	"r2_buckets": [
+		{
+			"binding": "MEDIA",
+			"bucket_name": "faustinajohnson-com-media",
+		},
+	],
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_id": "ba78631b-bd76-4be3-9998-a3daa66c3201",
+		},
+	],
+	"kv_namespaces": [
+		{
+			"id": "159ab331cc66419ea5488000fff104be",
+			"binding": "SESSION",
+		},
+	],
+	"preview_urls": true,
 }

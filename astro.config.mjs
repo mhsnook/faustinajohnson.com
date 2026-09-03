@@ -19,14 +19,13 @@ try {
 // EMDASH_LOCAL_AUTH=1. Retire that flag once emdash gates its passkey fallback
 // on something other than `import.meta.env.DEV`, which a preview build is not.
 const localAuth = process.env.EMDASH_LOCAL_AUTH === "1";
-const { CF_ACCESS_TEAM_DOMAIN: teamDomain, CF_ACCESS_AUD: audience } = process.env;
-const accessConfigured = Boolean(teamDomain && audience);
+const accessConfigured = Boolean(process.env.CF_ACCESS_TEAM_DOMAIN && process.env.CF_ACCESS_AUD);
 
 const accessAuth =
 	!localAuth && accessConfigured
 		? access({
-				teamDomain,
-				audience,
+				teamDomain: process.env.CF_ACCESS_TEAM_DOMAIN,
+				audience: process.env.CF_ACCESS_AUD,
 				// New identities are provisioned at this level. Lowering it is a
 				// one-way door: nobody below Admin can raise themselves back.
 				defaultRole: 50,
@@ -42,12 +41,8 @@ const requireAccessOnBuild = {
 		"astro:build:start": () => {
 			if (localAuth || accessConfigured) return;
 			throw new Error(
-				"Cloudflare Access is the admin login for this site, so a build needs " +
-					"CF_ACCESS_TEAM_DOMAIN and CF_ACCESS_AUD (see .env.example). " +
-					"On Cloudflare Workers Builds these belong in Settings -> Build -> " +
-					"Build variables and secrets; the runtime list under Settings -> " +
-					"Variables and Secrets is not read during a build. " +
-					"For a local build with passkey login instead: pnpm build:local",
+				"Admin logins are managed by Cloudflare Access, so the build runtime " +
+					"needs these two vars (see .env.example).",
 			);
 		},
 	},

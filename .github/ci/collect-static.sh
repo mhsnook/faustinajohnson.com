@@ -59,14 +59,11 @@ wait
 # pass needed, and it yields paths rather than a count.
 #
 # Two formatters because oxfmt cannot parse .astro (oxc-project/oxc#19715).
-# oxfmt takes every other file type; .prettierignore confines Prettier to the
-# .astro files so the two never rewrite the same file.
-#
-# `--ignore-path .gitignore` is load-bearing. Without it oxfmt reads BOTH
-# .gitignore and .prettierignore, and .prettierignore excludes everything that
-# is not .astro — which oxfmt cannot format anyway. oxfmt would then format zero
-# files, report zero drift, and this check would pass forever.
-pnpm exec oxfmt --ignore-path .gitignore . >/dev/null 2>&1
+# Each reads its own ignore file -- .oxfmtignore and .prettierignore -- so the
+# two never rewrite the same file. Passing --ignore-path is what stops oxfmt
+# reading .prettierignore, which would exclude everything but .astro and leave
+# it formatting nothing.
+pnpm exec oxfmt --ignore-path .oxfmtignore . >/dev/null 2>&1
 pnpm exec prettier --write "**/*.astro" >/dev/null 2>&1
 git diff --name-only | grep -Ev "$EXCLUDE" | sort >"$OUT/format.txt"
 git checkout -- .

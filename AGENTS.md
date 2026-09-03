@@ -9,7 +9,7 @@ npx emdash types                   # Regenerate TypeScript types from a running 
 
 pnpm typecheck                     # astro check
 pnpm lint                          # oxlint            (--fix available as lint:fix)
-pnpm format                        # oxfmt + prettier  (format:check to check only)
+pnpm format                        # staged files only (format:all for the repo)
 pnpm test                          # vitest run        (test:watch to watch)
 ```
 
@@ -44,6 +44,9 @@ pnpm build:local && pnpm preview --host   # also on the LAN
 There is no HMR. Rebuild to see a change.
 
 ### The upstream bug
+
+Tracked as [#3](https://github.com/mhsnook/faustinajohnson.com/issues/3) -- close
+that when the dev loop can go back to HMR.
 
 `astro dev` serves its first request and then hangs, silently -- no error, no
 panic, nothing in the log after the first `[200] /`. That is
@@ -118,33 +121,17 @@ The Worker has a real ceiling: Cloudflare refuses a deploy over **10 MB
 gzipped** on Workers Paid. It currently sits at about 2.9 MB, and the gate fails
 at the limit whatever the delta.
 
-### Two formatters, and one trap
+### Two formatters
 
-oxfmt cannot parse `.astro` ([oxc#19715]), so Prettier with
-`prettier-plugin-astro` formats the 24 `.astro` files and oxfmt formats
-everything else. `.prettierignore` is what keeps them apart -- it ignores
-everything except `.astro`.
+oxfmt cannot parse `.astro` ([oxc#19715](https://github.com/oxc-project/oxc/issues/19715)),
+so Prettier with `prettier-plugin-astro` formats the 24 `.astro` files and oxfmt
+formats everything else. Each reads its own ignore file, `.oxfmtignore` and
+`.prettierignore`, so the two never rewrite the same file.
 
-That file is also the trap. **oxfmt reads `.prettierignore` by default**, so
-without an explicit `--ignore-path .gitignore` it inherits "ignore everything
-but `.astro`", formats nothing, reports no drift, and the check passes forever.
-Both `package.json` and `.github/ci/collect-static.sh` pass that flag. Keep it.
-
-Prettier only reaches the frontmatter and `<style>` blocks of an `.astro` file
-plus its markup; Biome was the alternative and formats the frontmatter only.
-
-[oxc#19715]: https://github.com/oxc-project/oxc/issues/19715
-
-### Pre-existing drift
-
-`seed/seed.json`, `src/styles/theme.css` and `wrangler.jsonc` are unformatted
-and deliberately left that way -- reformatting them is a large diff with no
-reader. They clear whenever someone edits them. Markdown is excluded outright
-(`**/*.md`): the prose here is hand-wrapped, and oxfmt rewrites list
-continuations in it.
-
-`.agents/` and `.github/ci/` are excluded from both the linter and the
-formatter, and `emdash-env.d.ts` and `worker-configuration.d.ts` are generated.
+`pnpm format` formats the files you have staged, through `lint-staged`, which is
+the same footprint the `touched-clean` gate measures. `pnpm format:all` is the
+repo-wide pass; running it reformats `seed/seed.json`, `src/styles/theme.css`
+and `wrangler.jsonc`, which pre-date the formatter.
 
 ## Key Files
 

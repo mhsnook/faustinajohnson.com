@@ -5,34 +5,16 @@ issues a JWT; EmDash verifies it on every `/_emdash` request and matches it to
 a user by email. No second login, and passkeys are off.
 
 `astro.config.mjs` wires this up by passing `auth: access({ ... })` to
-`emdash()`.
+`emdash()`, so the env vars CF_ACCESS_TEAM_DOMAIN and CF_ACCESS_AUD must be
+available to the build.
 
-## Environment
+- Your team domain is one like `yourteam.cloudflareaccess.com`; find it in your
+  location bar or under `Zero Trust → Settings`.
+- For `CF_ACCESS_AUD`, you go to `Zero Trust → Access` and create a new
+  Application. The tag is then under `Applications → the app → Application
+  Audience (AUD) Tag`.
 
-Both values are read at build time. Copy `.env.example` to `.env` and fill
-them in:
-
-| Variable                | Where to find it                                                             |
-| ----------------------- | ---------------------------------------------------------------------------- |
-| `CF_ACCESS_TEAM_DOMAIN` | Zero Trust → Settings → Custom Pages, e.g. `yourteam.cloudflareaccess.com`    |
-| `CF_ACCESS_AUD`         | Zero Trust → Access → Applications → the app → Application Audience (AUD) Tag |
-
-Neither is a secret. `pnpm build` refuses to run without them.
-
-## On Cloudflare Workers Builds
-
-Workers keeps two separate lists of variables, and only one of them reaches a
-build:
-
-| Dashboard location                                 | Reaches             |
-| -------------------------------------------------- | ------------------- |
-| Settings → Build → Build variables and secrets     | the build container |
-| Settings → Variables and Secrets                   | the deployed Worker |
-
-Both values are read while the Worker is being built, so they go in the first
-list. Setting them in the second one leaves the build failing on the
-`require-cloudflare-access` hook, because `access()` bakes them into the bundle
-at config time and nothing looks them up again at runtime.
+Neither is a secret.
 
 ## The Access application
 

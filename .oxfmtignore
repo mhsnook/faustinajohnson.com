@@ -1,0 +1,18 @@
+# What oxfmt skips. The other half of the split is .prettierignore, which
+# confines Prettier to the .astro files -- oxfmt cannot parse those.
+
+dist/
+.astro/
+.wrangler/
+uploads/
+data.db
+
+# Vendored with the EmDash template, or generated on every astro check.
+.agents/
+.claude/
+.github/ci/
+emdash-env.d.ts
+worker-configuration.d.ts
+
+# Hand-wrapped prose: oxfmt rewrites list continuations in it.
+**/*.md

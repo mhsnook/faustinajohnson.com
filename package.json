@@ -12,10 +12,13 @@
 		"typecheck": "astro check",
 		"lint": "oxlint",
 		"lint:fix": "oxlint --fix",
-		"format": "oxfmt --ignore-path .gitignore . && prettier --write \"**/*.astro\"",
-		"format:check": "oxfmt --ignore-path .gitignore --check . && prettier --check \"**/*.astro\"",
+		"format": "lint-staged --diff=HEAD",
+		"format:staged": "lint-staged",
+		"format:all": "oxfmt --ignore-path .oxfmtignore . && prettier --write \"**/*.astro\"",
+		"format:check": "oxfmt --ignore-path .oxfmtignore --check . && prettier --check \"**/*.astro\"",
 		"test": "vitest run",
-		"test:watch": "vitest"
+		"test:watch": "vitest",
+		"prepare": "husky"
 	},
 	"dependencies": {
 		"@astrojs/cloudflare": "^14.2.6",
@@ -29,6 +32,8 @@
 	"devDependencies": {
 		"@astrojs/check": "^0.9.7",
 		"@cloudflare/workers-types": "^4.20260305.1",
+		"husky": "^9.1.7",
+		"lint-staged": "^17.4.1",
 		"oxfmt": "^0.65.0",
 		"oxlint": "^1.80.0",
 		"prettier": "^3.9.6",

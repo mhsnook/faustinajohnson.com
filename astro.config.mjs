@@ -19,36 +19,25 @@ try {
 // EMDASH_LOCAL_AUTH=1. Retire that flag once emdash gates its passkey fallback
 // on something other than `import.meta.env.DEV`, which a preview build is not.
 const localAuth = process.env.EMDASH_LOCAL_AUTH === "1";
-const { CF_ACCESS_TEAM_DOMAIN: teamDomain, CF_ACCESS_AUD: audience } = process.env;
-const accessConfigured = Boolean(teamDomain && audience);
 
-const accessAuth =
-	!localAuth && accessConfigured
-		? access({
-				teamDomain,
-				audience,
-				// New identities are provisioned at this level. Lowering it is a
-				// one-way door: nobody below Admin can raise themselves back.
-				defaultRole: 50,
-			})
-		: undefined;
+// The Access application is fixed and neither value is secret: the team domain
+// shows up in every login redirect, and the AUD tag only says which application
+// signed a JWT. `access()` bakes both into the bundle at config time, so they
+// have to be literals here or in the environment -- wrangler.jsonc's `vars` is
+// the worker's RUNTIME environment and a build container never sees it.
+const teamDomain = process.env.CF_ACCESS_TEAM_DOMAIN || "shy-snow-5265.cloudflareaccess.com";
+const audience =
+	process.env.CF_ACCESS_AUD || "a0d488cfb2cef1984c0462c469a257d431bd14fcd736d5dc501bc0efd01e02f9";
 
-// `astro preview` and `astro check` load this file too, and neither of them
-// serves the admin, so the missing-variable check waits until a build -- the
-// one moment where it would ship the wrong login.
-const requireAccessOnBuild = {
-	name: "require-cloudflare-access",
-	hooks: {
-		"astro:build:start": () => {
-			if (localAuth || accessConfigured) return;
-			throw new Error(
-				"Cloudflare Access is the admin login for this site, so a build needs " +
-					"CF_ACCESS_TEAM_DOMAIN and CF_ACCESS_AUD (see .env.example). " +
-					"For a local build with passkey login instead: pnpm build:local",
-			);
-		},
-	},
-};
+const accessAuth = localAuth
+	? undefined
+	: access({
+			teamDomain,
+			audience,
+			// New identities are provisioned at this level. Lowering it is a
+			// one-way door: nobody below Admin can raise themselves back.
+			defaultRole: 50,
+		});
 
 export default defineConfig({
 	// Canonical origin. Without it, absolute URLs (magic-link login, recovery
@@ -82,7 +71,6 @@ export default defineConfig({
 		},
 	],
 	integrations: [
-		requireAccessOnBuild,
 		react(),
 		emdash({
 			database: d1({ binding: "DB", session: "auto" }),

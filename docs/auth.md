@@ -5,19 +5,22 @@ issues a JWT; EmDash verifies it on every `/_emdash` request and matches it to
 a user by email. No second login, and passkeys are off.
 
 `astro.config.mjs` wires this up by passing `auth: access({ ... })` to
-`emdash()`.
+`emdash()`, so the team domain and the AUD tag must be available to the build.
+Both are written as literals in `astro.config.mjs`, so a clone builds with no
+setup; `CF_ACCESS_TEAM_DOMAIN` and `CF_ACCESS_AUD` in the environment or in
+`.env` override them, which is how you point a build at a different Access
+application.
 
-## Environment
+They do not belong in `wrangler.jsonc` under `vars`. That is the worker's
+*runtime* environment, and these are read while the worker is being built.
 
-Both values are read at build time. Copy `.env.example` to `.env` and fill
-them in:
+- Your team domain is one like `yourteam.cloudflareaccess.com`; find it in your
+  location bar or under `Zero Trust → Settings`.
+- For `CF_ACCESS_AUD`, you go to `Zero Trust → Access` and create a new
+  Application. The tag is then under `Applications → the app → Application
+  Audience (AUD) Tag`.
 
-| Variable                | Where to find it                                                             |
-| ----------------------- | ---------------------------------------------------------------------------- |
-| `CF_ACCESS_TEAM_DOMAIN` | Zero Trust → Settings → Custom Pages, e.g. `yourteam.cloudflareaccess.com`    |
-| `CF_ACCESS_AUD`         | Zero Trust → Access → Applications → the app → Application Audience (AUD) Tag |
-
-Neither is a secret. `pnpm build` refuses to run without them.
+Neither is a secret.
 
 ## The Access application
 

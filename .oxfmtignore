@@ -1,0 +1,14 @@
+dist/
+.astro/
+.wrangler/
+uploads/
+data.db
+
+.agents/
+.claude/
+.github/ci/
+emdash-env.d.ts
+worker-configuration.d.ts
+
+# Hand-wrapped prose: oxfmt rewrites list continuations in it.
+**/*.md

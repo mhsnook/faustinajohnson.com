@@ -9,7 +9,7 @@ npx emdash types                   # Regenerate TypeScript types from a running 
 
 pnpm typecheck                     # astro check
 pnpm lint                          # oxlint            (--fix available as lint:fix)
-pnpm format                        # staged files only (format:all for the repo)
+pnpm format                        # changed files    (:staged, :all, :check)
 pnpm test                          # vitest run        (test:watch to watch)
 ```
 
@@ -128,10 +128,23 @@ so Prettier with `prettier-plugin-astro` formats the 24 `.astro` files and oxfmt
 formats everything else. Each reads its own ignore file, `.oxfmtignore` and
 `.prettierignore`, so the two never rewrite the same file.
 
-`pnpm format` formats the files you have staged, through `lint-staged`, which is
-the same footprint the `touched-clean` gate measures. `pnpm format:all` is the
-repo-wide pass; running it reformats `seed/seed.json`, `src/styles/theme.css`
-and `wrangler.jsonc`, which pre-date the formatter.
+Three scopes. The first two run through `lint-staged`, so each file goes to
+whichever of the two formatters owns it:
+
+| Script                | Formats                                          |
+| --------------------- | ------------------------------------------------ |
+| `pnpm format`         | everything changed against HEAD, staged or not   |
+| `pnpm format:staged`  | only what is staged                              |
+| `pnpm format:all`     | the whole repo                                   |
+
+`format` reaches a new file once you `git add` it; before that only
+`format:all` sees it, because `git diff` does not list untracked files.
+
+The pre-commit hook is husky calling `pnpm format:staged`, so a file ships
+formatted whether or not anyone remembered to run it -- the same footprint the
+`touched-clean` gate measures. Prefer it over `format:all`, which also rewrites
+everything that pre-dates the formatter (`seed/seed.json`, `src/styles/theme.css`,
+`wrangler.jsonc` and five `.astro` files) and buries your change in the diff.
 
 ## Key Files
 

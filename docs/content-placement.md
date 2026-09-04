@@ -30,7 +30,7 @@ main column, `rail` on the right, footer.
 
 | Route | Shows |
 | --- | --- |
-| `/posts` | Every published piece, newest first, plus live search across pieces, notes and pages. Tags print under each card. |
+| `/posts` | Every published piece, newest first, plus live search across pieces, notes, pages and images. Tags print under each card. |
 | `/posts/[slug]` | One piece. Categories sit in the dateline; tags at the foot. |
 | `/notes` | Every published note, newest first by `note_date`. |
 | `/notes/[slug]` | One note. The dateline is the masthead kicker. |
@@ -49,6 +49,7 @@ links to it until you add it to the **`primary`** menu.
 | --- | --- | --- | --- |
 | A long-form piece | `posts` ("Pieces") | `title`, `published_on` | Home (top 4), `/posts`, its own page, category and tag archives, the "from the field" rail block |
 | A short dated entry | `notes` ("Field Notes") | `title`, `note_date` | Home (top 4), `/notes`, its own page |
+| A photograph | `images` | `title`, `image` | `/images`, its own page, and the "from the field" rail block on every page |
 | A line in the Method grid | `tenets` ("Method") | `title` | Home only — tenets have no page of their own |
 | A standalone page | `pages` | `title` | `/[slug]`, plus the home page for the three special slugs |
 
@@ -70,9 +71,14 @@ the URL uses.
 
 ## Images
 
-One entry is one subject, not one file. The `image` field is the main one --
-it is what the rail, the index and the link preview all use. Everything else on
-the entry shows only on its own page at `/images/<slug>`.
+One entry is one subject, not one file: four photographs of the same fort are
+one entry, not four. The `image` field is the main one -- it is what the rail,
+the index and the link preview all use. Everything else on the entry shows only
+on its own page at `/images/<slug>`.
+
+To put a photograph on the site: new entry under Images, upload into `image`,
+publish. It is at `/images/<slug>` immediately, on `/images`, and in the "from
+the field" rail block if it is one of the four newest.
 
 | Field | Required | What it does |
 | --- | --- | --- |
@@ -98,6 +104,10 @@ on the page.
 The MIDI player is a web component loaded from jsDelivr, with a Google-hosted
 soundfont, and only on entries that have a MIDI. If the script does not load,
 the player falls back to a plain download link.
+
+`title`, `caption` and `location` are indexed, so an image entry can turn up in
+the search box on `/posts` alongside pieces and notes. The gallery rows are not
+indexed -- a caption you want findable belongs in `caption`.
 
 ## Menus
 
@@ -170,6 +180,13 @@ not touched. Menu links are appended, never rewritten -- EmDash's own
 `applySeed` deletes a menu's items and rebuilds them from the seed, which would
 throw away anything added in the admin, so this does not use it. A new link
 lands at the end of the menu; drag it where you want it in the admin.
+
+A collection whose `supports` include `search` also gets its full-text index
+built and populated. Creating a collection over the API records the support but
+not the index behind it, so without that step the collection is searchable in
+name only -- nothing it holds ever comes back from the search box. That runs for
+collections this script creates; a collection that predates it and is missing
+its index needs `POST /search/enable` and `/search/rebuild` by hand.
 
 Running it twice is safe: the second run finds nothing to do.
 

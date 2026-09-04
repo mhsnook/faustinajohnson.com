@@ -17,7 +17,10 @@ if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
 		<SectionHead title="All Pieces" meta={`${posts.length} in total`} />
 
 		<div class="search">
-			<LiveSearch placeholder="Search the archive…" collections={["posts", "notes", "pages"]} />
+			<LiveSearch
+				placeholder="Search the archive…"
+				collections={["posts", "notes", "pages", "images"]}
+			/>
 		</div>
 
 		{

@@ -112,6 +112,12 @@ for (const collection of wanted) {
 		for (const [index, field] of (collection.fields ?? []).entries()) {
 			plan.push({ kind: "field", collection, field, sortOrder: index });
 		}
+		// Creating a collection records the "search" support but does not build
+		// the FTS index behind it, so a collection made this way is searchable
+		// in name only until it is enabled explicitly.
+		if ((collection.supports ?? []).includes("search")) {
+			plan.push({ kind: "search", collection });
+		}
 		continue;
 	}
 
@@ -173,6 +179,8 @@ for (const step of plan) {
 		console.log(
 			`! drift     ${step.collection.slug}.${step.field.slug}: live is ${step.live.type}, seed says ${step.field.type} -- not touching it`,
 		);
+	} else if (step.kind === "search") {
+		console.log(`+ search    ${step.collection.slug} (full-text index)`);
 	} else if (step.kind === "menuItem") {
 		console.log(`+ menu item ${step.menu.name}: ${step.item.label} -> ${step.item.url}`);
 	} else if (step.kind === "menuMissing") {
@@ -198,6 +206,7 @@ for (const step of plan) {
 	let what;
 	if (step.kind === "collection") what = `collection ${step.collection.slug}`;
 	else if (step.kind === "field") what = `field     ${step.collection.slug}.${step.field.slug}`;
+	else if (step.kind === "search") what = `search    ${step.collection.slug}`;
 	else what = `menu item ${step.menu.name}: ${step.item.label}`;
 
 	try {
@@ -205,6 +214,12 @@ for (const step of plan) {
 			await client.createCollection(collectionInput(step.collection));
 		} else if (step.kind === "field") {
 			await client.createField(step.collection.slug, fieldInput(step.field, step.sortOrder));
+		} else if (step.kind === "search") {
+			await client.request("POST", "/search/enable", {
+				collection: step.collection.slug,
+				enabled: true,
+			});
+			await client.request("POST", "/search/rebuild", { collection: step.collection.slug });
 		} else {
 			await client.request(
 				"POST",

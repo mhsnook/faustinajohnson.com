@@ -6,7 +6,7 @@ This is an EmDash site -- a CMS built on Astro with a full admin UI.
 pnpm build && pnpm preview         # Run the site -- see "Use astro preview" below
 pnpm build:local && pnpm preview   # Same, with a reachable admin UI
 npx emdash types                   # Regenerate TypeScript types from a running site
-pnpm schema:push -- --url URL --dry-run   # Push seed/seed.json's schema to a live site
+pnpm schema:push --url URL --dry-run      # Push seed/seed.json's schema to a live site
 
 pnpm typecheck                     # astro check
 pnpm lint                          # oxlint            (--fix available as lint:fix)

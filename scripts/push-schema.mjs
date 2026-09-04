@@ -29,7 +29,13 @@ import { parseArgs } from "node:util";
 import { customHeadersInterceptor, resolveCustomHeaders } from "emdash/client/cf-access";
 import { EmDashClient } from "emdash/client";
 
+// `pnpm run x -- --flag` forwards the "--" itself, and parseArgs would then read
+// every real flag after it as a positional and silently fall back to defaults --
+// which once pointed a production run at localhost.
+const argv = process.argv.slice(2).filter((arg) => arg !== "--");
+
 const { values } = parseArgs({
+	args: argv,
 	options: {
 		url: { type: "string", default: process.env.EMDASH_URL ?? "http://127.0.0.1:4321" },
 		token: { type: "string", default: process.env.EMDASH_TOKEN },
@@ -103,7 +109,20 @@ function menuItemInput(item, sortOrder) {
 
 const plan = [];
 
-const live = await client.collections();
+let live;
+try {
+	live = await client.collections();
+} catch (error) {
+	console.error(`Could not read the schema at ${values.url}: ${error.message}`);
+	if (error.status === 401 || error.status === 403) {
+		console.error(
+			"  Schema changes need an admin credential. Pass --token, or set EMDASH_HEADERS to the\n" +
+				"  Cloudflare Access service token if the admin is behind Access.",
+		);
+	}
+	process.exit(1);
+}
+
 const liveSlugs = new Set(live.map((c) => c.slug));
 
 for (const collection of wanted) {

@@ -169,9 +169,9 @@ So a new collection has to reach the live site some other way. That is what
 running site's schema, and creates whatever is missing.
 
 ```bash
-pnpm schema:push -- --url https://faustinajohnson.com --dry-run   # show the plan
-pnpm schema:push -- --url https://faustinajohnson.com             # apply it
-npx emdash types --url https://faustinajohnson.com                # refresh the types
+pnpm schema:push --url https://faustinajohnson.com --dry-run   # show the plan
+pnpm schema:push --url https://faustinajohnson.com             # apply it
+npx emdash types --url https://faustinajohnson.com             # refresh the types
 ```
 
 It only ever adds. A collection or field the live site has and the seed does
@@ -197,6 +197,13 @@ Authentication, in the order it tries them:
 | `--token`, or `EMDASH_TOKEN` | a `ec_pat_` token from the admin |
 | `EMDASH_HEADERS` | `"CF-Access-Client-Id: ...\nCF-Access-Client-Secret: ..."` for the Access service token the admin sits behind |
 | `--dev-bypass` | localhost only, and only under `astro dev` |
+
+Whichever you use has to be an **admin**. `schema:manage` is admin-only (role 50);
+everything day-to-day publishing needs -- content, media, menus, widgets,
+taxonomies -- is editor (role 40) or below. So a site can hand its writers editor
+accounts, keep the schema editor out of the admin UI for them entirely, and let
+schema changes arrive only through this script. `astro.config.mjs` currently
+provisions new Access identities at 50, which gives everyone the schema editor.
 
 The CLI's own `npx emdash schema create` and `add-field` cover simple fields but
 take neither `validation` nor `options`, so they cannot express the `gallery`

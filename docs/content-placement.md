@@ -101,9 +101,8 @@ date sorts to the bottom. Give a photo a date if you care where it lands.
 one an image plus an optional caption. Reordering the rows reorders the strip
 on the page.
 
-The MIDI player is a web component loaded from jsDelivr, with a Google-hosted
-soundfont, and only on entries that have a MIDI. If the script does not load,
-the player falls back to a plain download link.
+The player loads after the page does, and only on entries that have a MIDI.
+Until it arrives, and if it never does, the block shows a download link instead.
 
 `title`, `caption` and `location` are indexed, so an image entry can turn up in
 the search box on `/posts` alongside pieces and notes. The gallery rows are not
@@ -166,5 +165,5 @@ Anything else the seeder sees is dropped silently.
 | "updated weekly" beside Field Notes | `src/pages/index.astro` |
 | How many pieces and notes the home page shows | `src/pages/index.astro` (both are `limit: 4`; the heading's number words stop at four) |
 | A new kind of rail block | A component under `src/components/widgets/`, plus a branch in `WidgetRenderer.astro` |
-| How many images the rail shows, or the MIDI player's CDN and soundfont | `src/components/widgets/FieldPhotos.astro`, `src/components/MidiPlayer.astro` |
+| How many images the rail shows, or how the MIDI player sounds | `src/components/widgets/FieldPhotos.astro`, `src/components/MidiPlayer.astro` |
 | Site settings beyond `title` and `tagline` | Not extensible — use a widget area or a `pages` entry instead |

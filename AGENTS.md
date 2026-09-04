@@ -333,8 +333,7 @@ The decorative rails are widget areas, so they are editable in the admin UI:
 | `rail-left` | Left column    | The candle                                             |
 | `rail`      | Right column   | Now playing, On the desk, Appeared in, From the field  |
 
-`site:field-photos` ("From the field") renders the four newest `images` entries, not
-the lead images of recent pieces.
+`site:field-photos` ("From the field") renders the four newest `images` entries.
 
 `WidgetRenderer.astro` dispatches on `componentId`. Custom components are prefixed
 `site:` (`site:candle`, `site:now-playing`, `site:publications`, `site:field-photos`);

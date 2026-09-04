@@ -157,59 +157,6 @@ nothing else:
 
 Anything else the seeder sees is dropped silently.
 
-## Schema changes and the live site
-
-`seed/seed.json` only ever runs against an empty database, on the first request
-after setup completes. A site that already has content will not pick up a new
-collection from a deploy, however many times you ship it -- the seed is the
-starting shape, not a migration.
-
-So a new collection has to reach the live site some other way. That is what
-`pnpm schema:push` is for: it reads `seed/seed.json`, compares it against a
-running site's schema, and creates whatever is missing.
-
-```bash
-pnpm schema:push --url https://faustinajohnson.com --dry-run   # show the plan
-pnpm schema:push --url https://faustinajohnson.com             # apply it
-npx emdash types --url https://faustinajohnson.com             # refresh the types
-```
-
-It only ever adds. A collection or field the live site has and the seed does
-not is left alone; a field whose type has drifted from the seed is reported and
-not touched. Menu links are appended, never rewritten -- EmDash's own
-`applySeed` deletes a menu's items and rebuilds them from the seed, which would
-throw away anything added in the admin, so this does not use it. A new link
-lands at the end of the menu; drag it where you want it in the admin.
-
-A collection whose `supports` include `search` also gets its full-text index
-built and populated. Creating a collection over the API records the support but
-not the index behind it, so without that step the collection is searchable in
-name only -- nothing it holds ever comes back from the search box. That runs for
-collections this script creates; a collection that predates it and is missing
-its index needs `POST /search/enable` and `/search/rebuild` by hand.
-
-Running it twice is safe: the second run finds nothing to do.
-
-Authentication, in the order it tries them:
-
-| How | Where it comes from |
-| --- | --- |
-| `--token`, or `EMDASH_TOKEN` | a `ec_pat_` token from the admin |
-| `EMDASH_HEADERS` | `"CF-Access-Client-Id: ...\nCF-Access-Client-Secret: ..."` for the Access service token the admin sits behind |
-| `--dev-bypass` | localhost only, and only under `astro dev` |
-
-Whichever you use has to be an **admin**. `schema:manage` is admin-only (role 50);
-everything day-to-day publishing needs -- content, media, menus, widgets,
-taxonomies -- is editor (role 40) or below. So a site can hand its writers editor
-accounts, keep the schema editor out of the admin UI for them entirely, and let
-schema changes arrive only through this script. `astro.config.mjs` currently
-provisions new Access identities at 50, which gives everyone the schema editor.
-
-The CLI's own `npx emdash schema create` and `add-field` cover simple fields but
-take neither `validation` nor `options`, so they cannot express the `gallery`
-repeater's sub-fields or the MIDI type restriction. That is why the script
-posts the seed's definitions directly rather than shelling out to them.
-
 ## Needs a code change, not an edit
 
 | Thing | File |

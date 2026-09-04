@@ -187,6 +187,38 @@ This template ships with `.mcp.json`, `.cursor/mcp.json`, and `.vscode/mcp.json`
 - `pnpm-workspace.yaml` sets `better-sqlite3: false`, so `npx emdash seed` cannot open a database. Seed by starting the dev server, which applies `seed/seed.json` and regenerates `emdash-env.d.ts`. Do not flip that flag -- it is a deliberate supply-chain setting.
 - Custom design tokens go in `theme.css` as global classes; per-page layout goes in that page's scoped `<style>` block.
 
+## Pushing a schema change to a live site
+
+`seed/seed.json` only ever runs against an empty database, on the first request after
+setup completes. It is the starting shape, not a migration -- a collection added to it
+reaches a fresh database and never an existing one, with no warning either way.
+
+`pnpm schema:push` closes that gap. It reads the seed, diffs it against a running
+site's schema over the REST API, and creates what is missing.
+
+```bash
+pnpm schema:push --url https://faustinajohnson.com --dry-run   # show the plan
+pnpm schema:push --url https://faustinajohnson.com             # apply it
+npx emdash types --url https://faustinajohnson.com             # refresh the types
+```
+
+It only ever adds. A collection or field the live site has and the seed does not is
+left alone; a field whose type has drifted is reported, not corrected. A collection
+whose `supports` include `search` also gets its index built -- creating a collection
+over the API records the support without the `_emdash_fts_<slug>` table behind it, so
+it would otherwise be searchable in name only. Menu links are appended, never
+rewritten: `applySeed` deletes a menu's items and rebuilds them from the seed, and
+overwrites site settings unconditionally, so this does not use it. Running it twice
+is safe.
+
+The credential has to be an **admin**. `schema:manage` is Admin (50); everything an
+editor does day to day is 40 or below, which is why `access()` provisions at 40. Pass
+`--token` with an `ec_pat_`, or set `EMDASH_HEADERS` to the Cloudflare Access service
+token pair, since the admin sits behind Access.
+
+`npx emdash migrate` is a different thing and does not replace this: it applies
+EmDash's own core migrations at deploy time, and explicitly not user content models.
+
 ## Admin login
 
 The admin is behind Cloudflare Access rather than passkeys: `astro.config.mjs`

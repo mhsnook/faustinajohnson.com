@@ -37,11 +37,7 @@ const accessAuth = localAuth
 			// New identities are provisioned at this level. Lowering it is a
 			// one-way door: nobody below Admin can raise themselves back.
 			//
-			// 40 is Editor, which carries every day-to-day permission -- content,
-			// media, menus, widgets, taxonomies -- but not `schema:manage`, which
-			// is Admin-only. That is what keeps this site's content types owned by
-			// the repo: the schema editor is absent from the admin UI, and shape
-			// changes arrive only through `pnpm schema:push`.
+			// 40 is Editor: all content and taxonomies, but not schemas.
 			defaultRole: 40,
 		});
 

@@ -34,6 +34,8 @@ main column, `rail` on the right, footer.
 | `/posts/[slug]` | One piece. Categories sit in the dateline; tags at the foot. |
 | `/notes` | Every published note, newest first by `note_date`. |
 | `/notes/[slug]` | One note. The dateline is the masthead kicker. |
+| `/images` | Every published image entry, newest first by date. |
+| `/images/[slug]` | One image entry: the main image, its caption, the MIDI if it has one, and the rest of the gallery. |
 | `/[slug]` | Any `pages` entry. A portrait renders beside the text if the entry has one. |
 | `/category/[slug]` | Pieces in that category. |
 | `/tag/[slug]` | Pieces with that tag. |
@@ -55,7 +57,8 @@ Drafts are excluded everywhere; publish to make something appear.
 ## Tagging
 
 `category` (hierarchical) and `tag` (flat) attach to **`posts` only**. Notes,
-pages and tenets cannot be tagged, and adding a term to one does nothing.
+pages, tenets and images cannot be tagged, and adding a term to one does
+nothing.
 
 - Add a category → the piece shows up at `/category/<term>` and the term prints
   in the piece's dateline.
@@ -64,6 +67,37 @@ pages and tenets cannot be tagged, and adding a term to one does nothing.
 
 Taxonomy names in code are singular: `category`, `tag`. The term slug is what
 the URL uses.
+
+## Images
+
+One entry is one subject, not one file. The `image` field is the main one --
+it is what the rail, the index and the link preview all use. Everything else on
+the entry shows only on its own page at `/images/<slug>`.
+
+| Field | Required | What it does |
+| --- | --- | --- |
+| `title` | yes | The heading, and the label under the thumbnail on `/images`. |
+| `image` | yes | The main image. Every preview of this entry uses it. |
+| `caption` | | Printed under the image, on the index and the entry page. |
+| `location` | | Prints beside the date. |
+| `taken_on` | | The sort order everywhere images are listed. |
+| `midi` | | A `.mid` file. Plays on the entry page, under the image. |
+| `gallery` | | More views of the same subject, each with its own caption. Entry page only. |
+
+Alt text is not a field here. It lives on the upload itself, in the media
+library, so one image carries the same alt everywhere it is used. Set it when
+you upload, not per entry.
+
+Date is optional but it is the sort key: newest first, and an entry with no
+date sorts to the bottom. Give a photo a date if you care where it lands.
+
+`gallery` is a repeater -- add as many rows as you like, up to twelve, each
+one an image plus an optional caption. Reordering the rows reorders the strip
+on the page.
+
+The MIDI player is a web component loaded from jsDelivr, with a Google-hosted
+soundfont, and only on entries that have a MIDI. If the script does not load,
+the player falls back to a plain download link.
 
 ## Menus
 
@@ -95,7 +129,7 @@ Widget types that render:
 | `site:candle` | `caption` | The candle. |
 | `site:now-playing` | `track`, `meta`, `progress` (0–100) | Now playing, with the animated bars. |
 | `site:publications` | `items` (array of strings) | The "appeared in" list. |
-| `site:field-photos` | `caption`, `href` | Lead images from the four newest pieces. Fills itself; no uploads needed. |
+| `site:field-photos` | `caption`, `href` | The four newest `images` entries -- big frame plus three thumbs, each linking to its entry. |
 | `core:recent-posts` | `count` (5), `showDate` (true) | A list of recent pieces. |
 | `core:categories` | `limit` | Every category, linked. |
 | `core:tags` | `limit` | Every tag, linked. |
@@ -113,6 +147,23 @@ nothing else:
 
 Anything else the seeder sees is dropped silently.
 
+## Schema changes and the live site
+
+`seed/seed.json` only ever runs against an empty database, on the first request
+after setup completes. A site that already has content will not pick up a new
+collection from a deploy, however many times you ship it -- the seed is the
+starting shape, not a migration.
+
+So a new collection has to be created twice: once in `seed/seed.json`, so a
+fresh database is born with it, and once against the running site, so the live
+one gets it. Do the second in the admin under Schema, matching the seed field
+for field.
+
+`npx emdash schema create` and `npx emdash schema add-field` cover the simple
+fields, but neither takes `validation` or `options`, so the `gallery` repeater's
+sub-fields, the MIDI type restriction and every help line have to be set in the
+admin regardless.
+
 ## Needs a code change, not an edit
 
 | Thing | File |
@@ -122,4 +173,5 @@ Anything else the seeder sees is dropped silently.
 | "updated weekly" beside Field Notes | `src/pages/index.astro` |
 | How many pieces and notes the home page shows | `src/pages/index.astro` (both are `limit: 4`; the heading's number words stop at four) |
 | A new kind of rail block | A component under `src/components/widgets/`, plus a branch in `WidgetRenderer.astro` |
+| How many images the rail shows, or the MIDI player's CDN and soundfont | `src/components/widgets/FieldPhotos.astro`, `src/components/MidiPlayer.astro` |
 | Site settings beyond `title` and `tagline` | Not extensible — use a widget area or a `pages` entry instead |

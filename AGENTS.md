@@ -261,6 +261,8 @@ call to action. Every other route reuses the same shell.
 | Piece detail  | `/posts/[slug]`    | One long-form piece                                    |
 | Field notes   | `/notes`           | Every field note, newest first                         |
 | Note detail   | `/notes/[slug]`    | One field note                                         |
+| Images        | `/images`          | Every image entry, newest first                        |
+| Image detail  | `/images/[slug]`   | One image entry -- main image, MIDI, gallery           |
 | Page          | `/[slug]`          | A standalone page (e.g. `/about`, `/method`)           |
 | Category      | `/category/[slug]` | Pieces filtered by category                            |
 | Tag           | `/tag/[slug]`      | Pieces filtered by tag                                 |
@@ -272,6 +274,10 @@ call to action. Every other route reuses the same shell.
 - `notes` (labelled "Field Notes"): `title`, `note_date` (datetime), `content`.
   `note_date` drives both the printed dateline and the sort order.
 - `tenets` (labelled "Method"): `title`, `numeral`, `body`, `sort_order`. Three entries render the Method grid.
+- `images`: `title`, `image` (required, the one every preview uses), `caption`, `location`,
+  `taken_on` (datetime, the sort key), `midi` (file), `gallery` (repeater of image + caption).
+  One entry is one subject, not one file: the extra views live in `gallery` and show only
+  on the entry's own page.
 - `pages`: `title`, `kicker`, `portrait` (image), `content`.
   `/about` supplies the home page bio; `/method` supplies the Method heading and pull quote;
   `/correspondence` supplies the closing block.
@@ -290,6 +296,9 @@ The decorative rails are widget areas, so they are editable in the admin UI:
 | `marquee`   | Top bar        | Ticker lines -- one paragraph per item                 |
 | `rail-left` | Left column    | The candle                                             |
 | `rail`      | Right column   | Now playing, On the desk, Appeared in, From the field  |
+
+`site:field-photos` ("From the field") renders the four newest `images` entries, not
+the lead images of recent pieces.
 
 `WidgetRenderer.astro` dispatches on `componentId`. Custom components are prefixed
 `site:` (`site:candle`, `site:now-playing`, `site:publications`, `site:field-photos`);

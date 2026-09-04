@@ -155,6 +155,84 @@
 					"searchable": true
 				}
 			]
+		},
+		{
+			"slug": "images",
+			"label": "Images",
+			"labelSingular": "Image",
+			"urlPattern": "/images/{slug}",
+			"supports": ["drafts", "revisions", "search", "seo"],
+			"titleField": "title",
+			"dateField": "taken_on",
+			"admin": { "listColumns": ["location", "taken_on"] },
+			"fields": [
+				{
+					"slug": "title",
+					"label": "Title",
+					"type": "string",
+					"required": true,
+					"searchable": true
+				},
+				{
+					"slug": "image",
+					"label": "Image",
+					"type": "image",
+					"required": true,
+					"options": {
+						"help": "The one that stands for this entry everywhere else -- the rail, the index, the link preview. Set its alt text on the upload itself."
+					}
+				},
+				{
+					"slug": "caption",
+					"label": "Caption",
+					"type": "text",
+					"searchable": true,
+					"options": {
+						"rows": 3,
+						"help": "Printed under the image on both the index and the entry's own page."
+					}
+				},
+				{
+					"slug": "location",
+					"label": "Location",
+					"type": "string",
+					"searchable": true
+				},
+				{
+					"slug": "taken_on",
+					"label": "Date",
+					"type": "datetime",
+					"options": {
+						"help": "Optional, but it is the sort order: newest first, and undated entries fall to the bottom."
+					}
+				},
+				{
+					"slug": "midi",
+					"label": "MIDI",
+					"type": "file",
+					"validation": {
+						"allowedMimeTypes": ["audio/midi", "audio/x-midi", "audio/mid", "application/x-midi"]
+					},
+					"options": {
+						"help": "Optional. Plays on this entry's page, under the image."
+					}
+				},
+				{
+					"slug": "gallery",
+					"label": "More of the same",
+					"type": "repeater",
+					"validation": {
+						"maxItems": 12,
+						"subFields": [
+							{ "slug": "image", "label": "Image", "type": "image", "required": true },
+							{ "slug": "caption", "label": "Caption", "type": "string" }
+						]
+					},
+					"options": {
+						"help": "Other views of the same subject. They show on this entry's page only -- previews always use the one above."
+					}
+				}
+			]
 		}
 	],
 	"taxonomies": [
@@ -194,6 +272,7 @@
 				{ "type": "custom", "label": "The Work", "url": "/#work" },
 				{ "type": "custom", "label": "Method", "url": "/#method" },
 				{ "type": "custom", "label": "Field Notes", "url": "/#notes" },
+				{ "type": "custom", "label": "Images", "url": "/images" },
 				{ "type": "custom", "label": "Correspondence", "url": "/#correspondence" }
 			]
 		},
@@ -244,9 +323,7 @@
 							"_type": "block",
 							"style": "normal",
 							"_key": "tk4",
-							"children": [
-								{ "_type": "span", "_key": "tk5", "text": "now taking commissions" }
-							]
+							"children": [{ "_type": "span", "_key": "tk5", "text": "now taking commissions" }]
 						}
 					]
 				}
@@ -337,7 +414,7 @@
 					"componentId": "site:field-photos",
 					"props": {
 						"caption": "nine miles in, the light stays on",
-						"href": "/posts"
+						"href": "/images"
 					}
 				}
 			]
@@ -582,9 +659,7 @@
 							"_type": "block",
 							"style": "h2",
 							"_key": "p12",
-							"children": [
-								{ "_type": "span", "_key": "p13", "text": "What the deed says" }
-							]
+							"children": [{ "_type": "span", "_key": "p13", "text": "What the deed says" }]
 						},
 						{
 							"_type": "block",

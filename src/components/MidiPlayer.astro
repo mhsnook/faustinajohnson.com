@@ -1,0 +1,53 @@
+---
+interface Props {
+	src: string;
+	filename?: string | null;
+}
+
+const { src, filename } = Astro.props;
+
+// html-midi-player pulls in @magenta/music, which is orders of magnitude over
+// the client bundle budget the PR gate enforces, so it loads from a CDN instead
+// of being imported. The combine URL is the one the player documents: the
+// package expects tone, magenta core and focus-visible as externals and does
+// not work when loaded on its own.
+const PLAYER_SRC =
+	"https://cdn.jsdelivr.net/combine/npm/tone@14.7.77,npm/@magenta/music@1.23.1/es6/core.js,npm/focus-visible@5,npm/html-midi-player@1.5.0";
+const SOUND_FONT = "https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus";
+---
+
+<div class="panel panel--sunk midi">
+	<div class="kicker kicker--flame midi__label">♫ the recording</div>
+	<midi-player src={src} sound-font={SOUND_FONT} class="midi__player">
+		<a class="midi__fallback" href={src} download={filename ?? undefined}> download the midi </a>
+	</midi-player>
+</div>
+
+<script is:inline type="module" src={PLAYER_SRC}></script>
+
+<style>
+	.midi {
+		padding: 14px 16px;
+		margin: 22px 0;
+	}
+
+	.midi__label {
+		display: block;
+		margin-bottom: 10px;
+	}
+
+	.midi__player {
+		display: block;
+		width: 100%;
+	}
+
+	/* Light-DOM child, so it is what shows if the player script never loads --
+	   once the element upgrades it opens a shadow root and this is hidden. */
+	.midi__fallback {
+		font-family: var(--font-mono);
+		font-size: 11px;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--gold);
+	}
+</style>

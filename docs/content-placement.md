@@ -154,15 +154,37 @@ after setup completes. A site that already has content will not pick up a new
 collection from a deploy, however many times you ship it -- the seed is the
 starting shape, not a migration.
 
-So a new collection has to be created twice: once in `seed/seed.json`, so a
-fresh database is born with it, and once against the running site, so the live
-one gets it. Do the second in the admin under Schema, matching the seed field
-for field.
+So a new collection has to reach the live site some other way. That is what
+`pnpm schema:push` is for: it reads `seed/seed.json`, compares it against a
+running site's schema, and creates whatever is missing.
 
-`npx emdash schema create` and `npx emdash schema add-field` cover the simple
-fields, but neither takes `validation` or `options`, so the `gallery` repeater's
-sub-fields, the MIDI type restriction and every help line have to be set in the
-admin regardless.
+```bash
+pnpm schema:push -- --url https://faustinajohnson.com --dry-run   # show the plan
+pnpm schema:push -- --url https://faustinajohnson.com             # apply it
+npx emdash types --url https://faustinajohnson.com                # refresh the types
+```
+
+It only ever adds. A collection or field the live site has and the seed does
+not is left alone; a field whose type has drifted from the seed is reported and
+not touched. Menu links are appended, never rewritten -- EmDash's own
+`applySeed` deletes a menu's items and rebuilds them from the seed, which would
+throw away anything added in the admin, so this does not use it. A new link
+lands at the end of the menu; drag it where you want it in the admin.
+
+Running it twice is safe: the second run finds nothing to do.
+
+Authentication, in the order it tries them:
+
+| How | Where it comes from |
+| --- | --- |
+| `--token`, or `EMDASH_TOKEN` | a `ec_pat_` token from the admin |
+| `EMDASH_HEADERS` | `"CF-Access-Client-Id: ...\nCF-Access-Client-Secret: ..."` for the Access service token the admin sits behind |
+| `--dev-bypass` | localhost only, and only under `astro dev` |
+
+The CLI's own `npx emdash schema create` and `add-field` cover simple fields but
+take neither `validation` nor `options`, so they cannot express the `gallery`
+repeater's sub-fields or the MIDI type restriction. That is why the script
+posts the seed's definitions directly rather than shelling out to them.
 
 ## Needs a code change, not an edit
 

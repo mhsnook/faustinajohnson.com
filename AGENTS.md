@@ -6,6 +6,7 @@ This is an EmDash site -- a CMS built on Astro with a full admin UI.
 pnpm build && pnpm preview         # Run the site -- see "Use astro preview" below
 pnpm build:local && pnpm preview   # Same, with a reachable admin UI
 npx emdash types                   # Regenerate TypeScript types from a running site
+pnpm schema:push -- --url URL --dry-run   # Push seed/seed.json's schema to a live site
 
 pnpm typecheck                     # astro check
 pnpm lint                          # oxlint            (--fix available as lint:fix)
@@ -180,6 +181,9 @@ This template ships with `.mcp.json`, `.cursor/mcp.json`, and `.vscode/mcp.json`
 - `entry.id` is the slug (for URLs). `entry.data.id` is the database ULID (for API calls like `getEntryTerms`).
 - Always call `Astro.cache.set(cacheHint)` on pages that query content.
 - Taxonomy names in queries must match the seed's `"name"` field exactly (e.g., `"category"` not `"categories"`).
+- `seed/seed.json` only applies to an EMPTY database. A collection or field added to it
+  never reaches a site that already has content -- use `pnpm schema:push` for that. It
+  reads the seed, diffs it against a running site, and creates only what is missing.
 - `pnpm-workspace.yaml` sets `better-sqlite3: false`, so `npx emdash seed` cannot open a database. Seed by starting the dev server, which applies `seed/seed.json` and regenerates `emdash-env.d.ts`. Do not flip that flag -- it is a deliberate supply-chain setting.
 - Custom design tokens go in `theme.css` as global classes; per-page layout goes in that page's scoped `<style>` block.
 

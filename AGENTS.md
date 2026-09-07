@@ -4,7 +4,6 @@ This is an EmDash site -- a CMS built on Astro with a full admin UI.
 
 ```bash
 pnpm dev                           # Dev server with HMR, at localhost:4321
-pnpm dev:local                     # Same, with a reachable admin UI
 pnpm build && pnpm preview         # Production build, served locally
 pnpm build:local && pnpm preview   # Same, with a reachable admin UI
 npx emdash types                   # Regenerate TypeScript types from a running site
@@ -16,10 +15,11 @@ pnpm format                        # changed files    (:staged, :all, :check)
 pnpm test                          # vitest run        (test:watch to watch)
 ```
 
-The admin UI is at `http://localhost:4321/_emdash/admin`, and reaching it locally
-takes `pnpm dev:local` or `pnpm build:local` -- see "Admin login" below. Under
-either, `/_emdash/api/setup/dev-bypass?redirect=/_emdash/admin` signs you in as
-an admin without a passkey.
+The admin UI is at `http://localhost:4321/_emdash/admin`, and `pnpm dev` reaches
+it with no extra flag -- see "Admin login" below. A production build served by
+`preview` needs `pnpm build:local`. Under either,
+`/_emdash/api/setup/dev-bypass?redirect=/_emdash/admin` signs you in as an admin
+without a passkey.
 
 ### Ignore `.wrangler/` or `astro dev` falls over
 
@@ -85,7 +85,7 @@ Content seeds when setup completes, and the dev-bypass endpoint that completes i
 is dev-only:
 
 ```bash
-pnpm dev:local
+pnpm dev
 curl -L "http://127.0.0.1:4321/_emdash/api/setup/dev-bypass?redirect=/_emdash/admin"
 ```
 
@@ -230,8 +230,20 @@ The admin is behind Cloudflare Access rather than passkeys: `astro.config.mjs`
 passes `auth: access({ ... })` to `emdash()`, which bakes the team domain and
 the AUD tag into the worker at build time.
 
-`pnpm dev:local` and `pnpm build:local` set `EMDASH_LOCAL_AUTH=1`, which drops
-`auth` from the config and restores passkeys plus the dev-bypass endpoint.
+No local server ever receives an Access JWT, so `astro.config.mjs` drops `auth`
+whenever `NODE_ENV` is `development` -- which `astro dev` sets itself. That
+restores passkeys plus the dev-bypass endpoint, and `pnpm dev` needs no flag.
+
+EmDash agrees with that from its own side: its auth middleware already falls
+back to passkeys when `import.meta.env.DEV`, whatever `auth` says. Leaving
+`auth` set under `astro dev` therefore does not lock the admin -- dev-bypass
+still signs you in -- but the two disagree on the anonymous case, and an
+anonymous `/_emdash/admin` bounces to the production Cloudflare Access login
+instead of the local setup screen. Dropping `auth` keeps them in step.
+
+A production build is `NODE_ENV=production` whether or not it will be served
+locally, so `astro preview` sees the real Access config. That is what
+`EMDASH_LOCAL_AUTH=1` is still for, and what `pnpm build:local` sets.
 
 Both values are literals in `astro.config.mjs`, and `CF_ACCESS_TEAM_DOMAIN` /
 `CF_ACCESS_AUD` override them from `.env` or the shell -- that is what

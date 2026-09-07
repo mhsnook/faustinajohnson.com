@@ -58,12 +58,13 @@ EmDash's own invite flow is passkey registration, so it has no role here.
 
 ## Local development
 
-The Access JWT never reaches a local server, so `pnpm dev:local` and
-`pnpm build:local` set `EMDASH_LOCAL_AUTH=1`, which drops `auth` and restores
-passkeys plus the dev-bypass endpoint:
+The Access JWT never reaches a local server, so `astro.config.mjs` drops `auth`
+whenever `NODE_ENV` is `development`, which restores passkeys plus the
+dev-bypass endpoint. `astro dev` sets that itself; a production build does not,
+so serving one locally still takes `EMDASH_LOCAL_AUTH=1` via `build:local`:
 
 ```bash
-pnpm dev:local                      # or: pnpm build:local && pnpm preview
+pnpm dev                            # or: pnpm build:local && pnpm preview
 # then: /_emdash/api/setup/dev-bypass?redirect=/_emdash/admin
 ```
 

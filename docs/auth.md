@@ -58,10 +58,6 @@ EmDash's own invite flow is passkey registration, so it has no role here.
 
 ## Local development
 
-The config sets Access unconditionally, and EmDash's middleware ignores it
-under `import.meta.env.DEV`, so a dev server needs no flag and no variant
-config:
-
 ```bash
 pnpm dev
 # then: /_emdash/api/setup/dev-bypass?redirect=/_emdash/admin

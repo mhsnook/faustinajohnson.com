@@ -196,12 +196,8 @@ passes `auth: access({ ... })` to `emdash()`, which bakes the team domain and
 the AUD tag into the worker at build time. That is unconditional -- there is no
 dev variant of the config.
 
-Locally it does not get in the way, because EmDash's request middleware falls
-back to passkeys under `import.meta.env.DEV` whatever `auth` says. So under
-`pnpm dev` the dev-bypass URL signs you in and the admin works. Open
-`/_emdash/admin` anonymously and you will be redirected to the real Access
-login instead, since the login UI reads the configured auth mode -- go through
-dev-bypass rather than the bare admin URL.
+Locally, go in through the dev-bypass URL rather than `/_emdash/admin`, which
+sends an anonymous visitor to the real Access login.
 
 Both values are literals in `astro.config.mjs`, and `CF_ACCESS_TEAM_DOMAIN` /
 `CF_ACCESS_AUD` override them from `.env` or the shell -- that is what

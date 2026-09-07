@@ -82,9 +82,7 @@ export default defineConfig({
 	devToolbar: { enabled: false },
 	vite: {
 		server: {
-			// miniflare rewrites its D1/R2/KV state under .wrangler/ on every
-			// request; without this the watcher reads those writes as source edits
-			// and reloads the worker mid-request, wedging astro dev.
+			// Needed until cloudflare/workers-sdk issue #15550.
 			watch: { ignored: ["**/.wrangler/**"] },
 		},
 	},

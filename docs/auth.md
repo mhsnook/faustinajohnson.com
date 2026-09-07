@@ -58,12 +58,12 @@ EmDash's own invite flow is passkey registration, so it has no role here.
 
 ## Local development
 
-The Access JWT never reaches a local `astro preview`, so `pnpm build:local`
-sets `EMDASH_LOCAL_AUTH=1`, which drops `auth` and restores passkeys plus the
-dev-bypass endpoint:
+The Access JWT never reaches a local server, so `pnpm dev:local` and
+`pnpm build:local` set `EMDASH_LOCAL_AUTH=1`, which drops `auth` and restores
+passkeys plus the dev-bypass endpoint:
 
 ```bash
-pnpm build:local && pnpm preview
+pnpm dev:local                      # or: pnpm build:local && pnpm preview
 # then: /_emdash/api/setup/dev-bypass?redirect=/_emdash/admin
 ```
 

@@ -3,7 +3,9 @@ This is an EmDash site -- a CMS built on Astro with a full admin UI.
 ## Commands
 
 ```bash
-pnpm build && pnpm preview         # Run the site -- see "Use astro preview" below
+pnpm dev                           # Dev server with HMR, at localhost:4321
+pnpm dev:local                     # Same, with a reachable admin UI
+pnpm build && pnpm preview         # Production build, served locally
 pnpm build:local && pnpm preview   # Same, with a reachable admin UI
 npx emdash types                   # Regenerate TypeScript types from a running site
 pnpm schema:push --url URL --dry-run      # Push seed/seed.json's schema to a live site
@@ -14,50 +16,58 @@ pnpm format                        # changed files    (:staged, :all, :check)
 pnpm test                          # vitest run        (test:watch to watch)
 ```
 
-`pnpm dev` starts, serves one request, and then wedges. Use `pnpm preview`.
-
 The admin UI is at `http://localhost:4321/_emdash/admin`, and reaching it locally
-takes `pnpm build:local` -- see "Admin login" below. Under `build:local`,
-`/_emdash/api/setup/dev-bypass?redirect=/_emdash/admin` signs you in as an admin
-without a passkey.
+takes `pnpm dev:local` or `pnpm build:local` -- see "Admin login" below. Under
+either, `/_emdash/api/setup/dev-bypass?redirect=/_emdash/admin` signs you in as
+an admin without a passkey.
 
-### Use `astro preview`, not `astro dev`
+### Ignore `.wrangler/` or `astro dev` falls over
 
-`astro dev` is currently unusable on this stack (emdash 0.35.0 + astro 7.2.9 +
-@astrojs/cloudflare + workerd). It serves the first request and then hangs or 500s
-every request after, while burning 50-90% CPU. Measured on the same worker, same
-D1, same bindings:
+`astro dev` needs one line of config to be usable on this stack:
 
-| | `astro dev` | `astro preview` |
-| --- | --- | --- |
-| First request | 200 in 7.0s | 200 in 0.22s |
-| Second request | hang, then 500 | 200 in 0.09s |
-| Later requests | dead | 200 in ~0.09s |
-| Idle CPU / RSS | 53-90% / 1.1-2.1GB | 34% / 544MB |
-
-So the working loop is a rebuild, which costs about ten seconds:
-
-```bash
-pnpm build:local && pnpm preview          # localhost:4321
-pnpm build:local && pnpm preview --host   # also on the LAN
+```js
+vite: { server: { watch: { ignored: ["**/.wrangler/**"] } } }
 ```
 
-There is no HMR. Rebuild to see a change.
+Miniflare keeps its local D1, R2 and KV state in `.wrangler/`, and rewrites it on
+every request. Vite's watcher sees those writes as source changes and reloads the
+worker underneath the request that caused them, which starts the next round of
+writes. Measured on the same worker, same D1, same bindings, six sequential
+requests to `/` from a cold start:
 
-### HMR not working
+| Request | Without the ignore | With it |
+| --- | --- | --- |
+| 1 | 500 in 0.8s | 200 in 0.97s |
+| 2 | timeout at 11s | 200 in 1.04s |
+| 3 | connection dropped | 200 in 0.96s |
+| 4 | 200 in 10.8s | 200 in 0.91s |
+| 5 | 200 in 35.9s | 200 in 0.93s |
+| 6 | -- | 200 in 0.85s |
 
-Tracked as [#3](https://github.com/mhsnook/faustinajohnson.com/issues/3) -- close
-that when the dev loop can go back to HMR.
+Idle CPU with the ignore is 0%; RSS sits around 2.1GB, which is the SSR module
+graph and not a leak. The server's own log reports 70-110ms per request -- the
+rest of that second is the workerd round trip.
 
-`astro dev` serves its first request and then hangs, silently -- no error, no
-panic, nothing in the log after the first `[200] /`. That is
-**emdash-cms/emdash#2626** (open): `getBackend()` parks its in-flight init promise
-on a `globalThis` singleton and never clears it if the request that started it is
-cancelled, so every later request in the isolate awaits a promise that will never
-settle. Affects 0.34.0 through 0.36.0.
+HMR works. Editing a `.astro` file logs one `[vite] program reload`, the next
+request renders the change in ~300ms, and later requests drop back to ~80ms. No
+rebuild, no restart.
 
-Two related issues are already handled and need no workaround here:
+`astro preview` is still the way to check a production build, but it is no longer
+the only way to run the site.
 
+### Known dev-mode issues
+
+- **emdash-cms/emdash#2626** (open) -- `getBackend()` parks its in-flight init
+  promise on a `globalThis` singleton and never clears it if the request that
+  started it is cancelled, so every later request in that isolate awaits a promise
+  that will never settle. This is what turned a watcher-triggered reload into a
+  permanent wedge rather than a slow request. Ignoring `.wrangler/` stops the
+  cancellations that trigger it; the bug itself is still there, so a hang after
+  the first request means something else is cancelling requests mid-init.
+- **emdash-cms/emdash#2572** (open) -- the admin stylesheet 500s under `astro dev`
+  (`vite:oxc` parse error on the `?direct` CSS request), so the admin UI is
+  unstyled in dev. It loads and works; it just looks wrong. Use `build:local` +
+  `preview` to see the admin styled.
 - **withastro/astro#17868** -- an unresolvable specifier inside workerd threw an
   uncaught exception, panicked the process, broke the IPC pipe, and corrupted
   Astro's route registry. It surfaced as `Unable to resolve
@@ -68,20 +78,15 @@ Two related issues are already handled and need no workaround here:
   `astro.config.mjs`; it was removed after two cold starts on the current
   versions showed zero panics, zero reloads, and zero late dep discoveries. Put
   it back only if those reappear.
-- **emdash-cms/emdash#2572** (open) -- the admin stylesheet 500s under `astro dev`
-  (`vite:oxc` parse error on the `?direct` CSS request), so the admin UI is
-  unstyled in dev.
 
 ### Seeding a fresh database
 
 Content seeds when setup completes, and the dev-bypass endpoint that completes it
-is dev-only. `astro dev` reliably serves exactly one request, which is enough:
+is dev-only:
 
 ```bash
-npx astro dev
+pnpm dev:local
 curl -L "http://127.0.0.1:4321/_emdash/api/setup/dev-bypass?redirect=/_emdash/admin"
-npx astro dev stop
-pnpm build:local && npx astro preview --host 0.0.0.0
 ```
 
 ### Run only one dev server
@@ -225,8 +230,8 @@ The admin is behind Cloudflare Access rather than passkeys: `astro.config.mjs`
 passes `auth: access({ ... })` to `emdash()`, which bakes the team domain and
 the AUD tag into the worker at build time.
 
-`pnpm build:local` sets `EMDASH_LOCAL_AUTH=1`, which drops `auth` from the
-config and restores passkeys plus the dev-bypass endpoint.
+`pnpm dev:local` and `pnpm build:local` set `EMDASH_LOCAL_AUTH=1`, which drops
+`auth` from the config and restores passkeys plus the dev-bypass endpoint.
 
 Both values are literals in `astro.config.mjs`, and `CF_ACCESS_TEAM_DOMAIN` /
 `CF_ACCESS_AUD` override them from `.env` or the shell -- that is what

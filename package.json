@@ -5,6 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "astro dev",
+		"dev:local": "EMDASH_LOCAL_AUTH=1 astro dev",
 		"build": "astro build",
 		"build:local": "EMDASH_LOCAL_AUTH=1 astro build",
 		"preview": "astro preview",

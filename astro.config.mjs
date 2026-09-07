@@ -89,4 +89,13 @@ export default defineConfig({
 		}),
 	],
 	devToolbar: { enabled: false },
+	vite: {
+		server: {
+			// Load-bearing, not housekeeping: miniflare rewrites its D1/R2/KV state
+			// under .wrangler/ on every request, and without this the watcher reads
+			// those writes as source changes and reloads the worker mid-request.
+			// Drop it and `astro dev` 500s or hangs from the first request on.
+			watch: { ignored: ["**/.wrangler/**"] },
+		},
+	},
 });

@@ -245,12 +245,11 @@ A production build is `NODE_ENV=production` whether or not it will be served
 locally, so `astro preview` sees the real Access config. That is what
 `EMDASH_LOCAL_AUTH=1` is still for, and what `pnpm build:local` sets.
 
-Dev-bypass signs you in without a passkey. To exercise the passkey flow itself,
-copy `.dev.vars.example` to `.dev.vars` -- `wrangler.jsonc` pins
-`EMDASH_SITE_URL` to the production origin, `nodejs_compat` puts `vars` on
-`process.env`, and EmDash derives the passkey RP ID from it, so a local server
-offers `rp.id: "faustinajohnson.com"` and the browser refuses it. Details in
-[docs/auth.md](docs/auth.md).
+Dev-bypass signs you in without a passkey; the passkey flow itself also works
+on localhost with nothing to configure, because EmDash takes the relying-party
+ID from the request origin. Outbound mail is the one thing that cannot use the
+request origin -- it comes from the stored `emdash:site_url`, written once at
+setup. Both in [docs/auth.md](docs/auth.md).
 
 Both values are literals in `astro.config.mjs`, and `CF_ACCESS_TEAM_DOMAIN` /
 `CF_ACCESS_AUD` override them from `.env` or the shell -- that is what

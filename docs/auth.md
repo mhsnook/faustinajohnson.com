@@ -70,34 +70,38 @@ pnpm dev                            # or: pnpm build:local && pnpm preview
 
 ### Passkeys on localhost
 
-The dev-bypass endpoint signs you in without a passkey, which is what you want
-most days. Exercising the passkey flow itself -- registering one, or signing in
-with one -- takes one more step.
+Dev-bypass signs you in without a passkey, which is what you want most days.
+The passkey flow itself also works locally, with nothing to configure: EmDash
+derives the relying-party ID from the request origin, so a server on
+`http://localhost:4321` offers `rpId: "localhost"`, which is both a valid RP ID
+and a secure context.
 
-`wrangler.jsonc` pins `EMDASH_SITE_URL` to `https://faustinajohnson.com` so
-outbound links keep pointing at the real site. The `nodejs_compat` flag puts
-`vars` on `process.env`, so a local server reads that pin as well, and EmDash
-derives the passkey relying-party ID from it. Registration options then come
-back as `rp.id: "faustinajohnson.com"` while the page is served from
-`localhost`, and the browser rejects the credential: an RP ID has to match the
-origin asking for it.
+Use `localhost` rather than `127.0.0.1` -- an IP address is not a valid RP ID.
+A passkey registered against `localhost` is also useless from another device
+over `--host`, since the RP ID will not match and plain HTTP to a LAN address
+is not a secure context; that needs HTTPS under a hostname, with
+`EMDASH_ALLOWED_ORIGINS` listing the extra origin.
 
-Override it locally. `.dev.vars` is gitignored and both `astro dev` and
-`astro preview` read it:
+### Where outbound links get their origin
+
+Login and recovery mail cannot take the origin from the request, or a spoofed
+`Host` header could redirect a login link. EmDash resolves them as
+`EMDASH_SITE_URL` (unset here), then the stored `emdash:site_url` option, then
+the request URL.
+
+That stored option is written once, when setup completes, from whichever origin
+completed it -- `setIfAbsent`, and nothing in EmDash rewrites it afterwards.
+Complete setup on the canonical domain. Running it on a `workers.dev` or
+preview URL points every future magic link there, and correcting it means
+writing the row directly:
 
 ```bash
-cp .dev.vars.example .dev.vars     # EMDASH_SITE_URL="http://localhost:4321"
+wrangler d1 execute DB --remote \
+  --command "update options set value = '\"https://faustinajohnson.com\"' where name = 'emdash:site_url'"
 ```
 
-Registration and sign-in then both report `rpId: "localhost"`, which is a valid
-RP ID in a secure context, and the flow works end to end.
-
-Two things this does not cover. Use `localhost`, not `127.0.0.1` -- an IP
-address is not a valid RP ID. And a passkey registered against `localhost` is
-useless from another device over `--host`, since the RP ID will not match and
-plain HTTP to a LAN address is not a secure context; serving that over HTTPS
-under a hostname, with `EMDASH_ALLOWED_ORIGINS` listing the extra origin, is
-the way to reach it.
+Everything else that needs an origin -- passkeys, OAuth, sitemap, robots --
+derives it from the request, so each host answers for itself.
 
 ## The CLI
 

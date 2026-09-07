@@ -7,19 +7,6 @@
 	"main": "./src/worker.ts",
 	"compatibility_date": "2026-02-24",
 	"compatibility_flags": ["nodejs_compat"],
-	// Canonical origin for outbound links. EmDash resolves these as
-	// EMDASH_SITE_URL -> stored `emdash:site_url` -> request URL, and the stored
-	// value is written once at setup: running setup on the workers.dev URL is
-	// what made magic links point there. Pinning it here outranks the store.
-	//
-	// Not removable now that dev overrides it: setup writes the stored option
-	// with setIfAbsent and nothing else ever rewrites it, so dropping this pin
-	// falls back to whatever that one write left in D1. `nodejs_compat` puts
-	// this on process.env, so a local server reads it too and offers a passkey
-	// RP ID the browser refuses -- .dev.vars is where you override that.
-	"vars": {
-		"EMDASH_SITE_URL": "https://faustinajohnson.com",
-	},
 	// Cloudflare Email Sending, for magic-link login and recovery mail. The
 	// sender subdomain mail.faustinajohnson.com is onboarded with SPF, DKIM and
 	// DMARC; the apex is deliberately left free for other mail providers.

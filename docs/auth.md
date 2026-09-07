@@ -84,24 +84,19 @@ is not a secure context; that needs HTTPS under a hostname, with
 
 ### Where outbound links get their origin
 
-Login and recovery mail cannot take the origin from the request, or a spoofed
-`Host` header could redirect a login link. EmDash resolves them as
-`EMDASH_SITE_URL` (unset here), then the stored `emdash:site_url` option, then
-the request URL.
+Nothing is pinned; each host answers for itself. Passkeys, OAuth, sitemap and
+robots all take the origin from the request.
 
-That stored option is written once, when setup completes, from whichever origin
-completed it -- `setIfAbsent`, and nothing in EmDash rewrites it afterwards.
-Complete setup on the canonical domain. Running it on a `workers.dev` or
-preview URL points every future magic link there, and correcting it means
-writing the row directly:
+Mail is the exception, because a spoofed `Host` header must not be able to
+redirect a login link: it reads the stored `emdash:site_url` option, written
+once when setup completed. Note that Settings -> General -> Site URL is a
+different option (`site:url`, for canonical links and sitemaps) and does not
+change it. Correcting the mail one, if it ever matters, is a direct write:
 
 ```bash
 wrangler d1 execute DB --remote \
   --command "update options set value = '\"https://faustinajohnson.com\"' where name = 'emdash:site_url'"
 ```
-
-Everything else that needs an origin -- passkeys, OAuth, sitemap, robots --
-derives it from the request, so each host answers for itself.
 
 ## The CLI
 

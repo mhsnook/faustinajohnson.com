@@ -247,9 +247,8 @@ locally, so `astro preview` sees the real Access config. That is what
 
 Dev-bypass signs you in without a passkey; the passkey flow itself also works
 on localhost with nothing to configure, because EmDash takes the relying-party
-ID from the request origin. Outbound mail is the one thing that cannot use the
-request origin -- it comes from the stored `emdash:site_url`, written once at
-setup. Both in [docs/auth.md](docs/auth.md).
+ID from the request origin. Mail is the one thing that cannot -- see
+[docs/auth.md](docs/auth.md).
 
 Both values are literals in `astro.config.mjs`, and `CF_ACCESS_TEAM_DOMAIN` /
 `CF_ACCESS_AUD` override them from `.env` or the shell -- that is what

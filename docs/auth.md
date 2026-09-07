@@ -58,45 +58,16 @@ EmDash's own invite flow is passkey registration, so it has no role here.
 
 ## Local development
 
-The Access JWT never reaches a local server, so `astro.config.mjs` drops `auth`
-whenever `NODE_ENV` is `development`, which restores passkeys plus the
-dev-bypass endpoint. `astro dev` sets that itself; a production build does not,
-so serving one locally still takes `EMDASH_LOCAL_AUTH=1` via `build:local`:
+`astro.config.mjs` drops `auth` when `NODE_ENV` is `development`, which `astro
+dev` sets itself, so the local admin needs no Access JWT and no flag:
 
 ```bash
-pnpm dev                            # or: pnpm build:local && pnpm preview
+pnpm dev
 # then: /_emdash/api/setup/dev-bypass?redirect=/_emdash/admin
 ```
 
-### Passkeys on localhost
-
-Dev-bypass signs you in without a passkey, which is what you want most days.
-The passkey flow itself also works locally, with nothing to configure: EmDash
-derives the relying-party ID from the request origin, so a server on
-`http://localhost:4321` offers `rpId: "localhost"`, which is both a valid RP ID
-and a secure context.
-
-Use `localhost` rather than `127.0.0.1` -- an IP address is not a valid RP ID.
-A passkey registered against `localhost` is also useless from another device
-over `--host`, since the RP ID will not match and plain HTTP to a LAN address
-is not a secure context; that needs HTTPS under a hostname, with
-`EMDASH_ALLOWED_ORIGINS` listing the extra origin.
-
-### Where outbound links get their origin
-
-Nothing is pinned; each host answers for itself. Passkeys, OAuth, sitemap and
-robots all take the origin from the request.
-
-Mail is the exception, because a spoofed `Host` header must not be able to
-redirect a login link: it reads the stored `emdash:site_url` option, written
-once when setup completed. Note that Settings -> General -> Site URL is a
-different option (`site:url`, for canonical links and sitemaps) and does not
-change it. Correcting the mail one, if it ever matters, is a direct write:
-
-```bash
-wrangler d1 execute DB --remote \
-  --command "update options set value = '\"https://faustinajohnson.com\"' where name = 'emdash:site_url'"
-```
+Dev-bypass is dev-only. A production build carries the real Access config, so
+`astro preview` has no local way into the admin.
 
 ## The CLI
 

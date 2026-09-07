@@ -3,9 +3,8 @@ This is an EmDash site -- a CMS built on Astro with a full admin UI.
 ## Commands
 
 ```bash
-pnpm dev                           # Dev server with HMR, at localhost:4321
+pnpm dev                           # Dev server with HMR, usually at localhost:4321
 pnpm build && pnpm preview         # Production build, served locally
-pnpm build:local && pnpm preview   # Same, with a reachable admin UI
 npx emdash types                   # Regenerate TypeScript types from a running site
 pnpm schema:push --url URL --dry-run      # Push seed/seed.json's schema to a live site
 
@@ -15,11 +14,11 @@ pnpm format                        # changed files    (:staged, :all, :check)
 pnpm test                          # vitest run        (test:watch to watch)
 ```
 
-The admin UI is at `http://localhost:4321/_emdash/admin`, and `pnpm dev` reaches
-it with no extra flag -- see "Admin login" below. A production build served by
-`preview` needs `pnpm build:local`. Under either,
-`/_emdash/api/setup/dev-bypass?redirect=/_emdash/admin` signs you in as an admin
-without a passkey.
+The admin UI is at `/_emdash/admin`, usually on `http://localhost:4321`, and
+`pnpm dev` reaches it with no extra flag -- see "Admin login" below.
+`/_emdash/api/setup/dev-bypass?redirect=/_emdash/admin` signs you in as an
+admin without a passkey. It is dev-only, so a production build served by
+`preview` has no local way into the admin.
 
 ### Ignore `.wrangler/` or `astro dev` falls over
 
@@ -28,32 +27,6 @@ without a passkey.
 ```js
 vite: { server: { watch: { ignored: ["**/.wrangler/**"] } } }
 ```
-
-Miniflare keeps its local D1, R2 and KV state in `.wrangler/`, and rewrites it on
-every request. Vite's watcher sees those writes as source changes and reloads the
-worker underneath the request that caused them, which starts the next round of
-writes. Measured on the same worker, same D1, same bindings, six sequential
-requests to `/` from a cold start:
-
-| Request | Without the ignore | With it |
-| --- | --- | --- |
-| 1 | 500 in 0.8s | 200 in 0.97s |
-| 2 | timeout at 11s | 200 in 1.04s |
-| 3 | connection dropped | 200 in 0.96s |
-| 4 | 200 in 10.8s | 200 in 0.91s |
-| 5 | 200 in 35.9s | 200 in 0.93s |
-| 6 | -- | 200 in 0.85s |
-
-Idle CPU with the ignore is 0%; RSS sits around 2.1GB, which is the SSR module
-graph and not a leak. The server's own log reports 70-110ms per request -- the
-rest of that second is the workerd round trip.
-
-HMR works. Editing a `.astro` file logs one `[vite] program reload`, the next
-request renders the change in ~300ms, and later requests drop back to ~80ms. No
-rebuild, no restart.
-
-`astro preview` is still the way to check a production build, but it is no longer
-the only way to run the site.
 
 ### Known dev-mode issues
 
@@ -66,8 +39,7 @@ the only way to run the site.
   the first request means something else is cancelling requests mid-init.
 - **emdash-cms/emdash#2572** (open) -- the admin stylesheet 500s under `astro dev`
   (`vite:oxc` parse error on the `?direct` CSS request), so the admin UI is
-  unstyled in dev. It loads and works; it just looks wrong. Use `build:local` +
-  `preview` to see the admin styled.
+  unstyled in dev. It loads and works; it just looks wrong.
 - **withastro/astro#17868** -- an unresolvable specifier inside workerd threw an
   uncaught exception, panicked the process, broke the IPC pipe, and corrupted
   Astro's route registry. It surfaced as `Unable to resolve
@@ -234,21 +206,14 @@ No local server ever receives an Access JWT, so `astro.config.mjs` drops `auth`
 whenever `NODE_ENV` is `development` -- which `astro dev` sets itself. That
 restores passkeys plus the dev-bypass endpoint, and `pnpm dev` needs no flag.
 
-EmDash agrees with that from its own side: its auth middleware already falls
-back to passkeys when `import.meta.env.DEV`, whatever `auth` says. Leaving
-`auth` set under `astro dev` therefore does not lock the admin -- dev-bypass
-still signs you in -- but the two disagree on the anonymous case, and an
-anonymous `/_emdash/admin` bounces to the production Cloudflare Access login
-instead of the local setup screen. Dropping `auth` keeps them in step.
+EmDash agrees from its own side: its auth middleware already falls back to
+passkeys when `import.meta.env.DEV`, whatever `auth` says. Dropping `auth` in
+dev keeps the two in step, so an anonymous `/_emdash/admin` reaches the local
+setup screen rather than the production Access login.
 
-A production build is `NODE_ENV=production` whether or not it will be served
-locally, so `astro preview` sees the real Access config. That is what
-`EMDASH_LOCAL_AUTH=1` is still for, and what `pnpm build:local` sets.
-
-Dev-bypass signs you in without a passkey; the passkey flow itself also works
-on localhost with nothing to configure, because EmDash takes the relying-party
-ID from the request origin. Mail is the one thing that cannot -- see
-[docs/auth.md](docs/auth.md).
+A production build is `NODE_ENV=production` even when `preview` serves it
+locally, so it carries the real Access config and its admin is not reachable
+from localhost.
 
 Both values are literals in `astro.config.mjs`, and `CF_ACCESS_TEAM_DOMAIN` /
 `CF_ACCESS_AUD` override them from `.env` or the shell -- that is what

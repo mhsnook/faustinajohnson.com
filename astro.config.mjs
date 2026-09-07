@@ -15,14 +15,11 @@ try {
 
 // Cloudflare Access authenticates at the edge and EmDash verifies the same JWT
 // on every /_emdash request, so the admin needs no second login. Setting `auth`
-// disables passkeys, and no local server ever receives an Access JWT.
-//
-// `astro dev` sets NODE_ENV itself, and emdash's middleware already falls back
-// to passkeys under import.meta.env.DEV -- dropping `auth` here keeps config and
-// middleware agreeing, so an anonymous /_emdash/admin reaches the local login
-// instead of bouncing to the production Access page. `astro build` is
-// NODE_ENV=production either way, so a preview build still needs the flag.
-const localAuth = process.env.NODE_ENV === "development" || process.env.EMDASH_LOCAL_AUTH === "1";
+// disables passkeys, and no local server ever receives an Access JWT -- so an
+// anonymous /_emdash/admin would bounce to the production Access page. `astro
+// dev` sets NODE_ENV itself; dropping `auth` there keeps this in step with
+// EmDash, whose middleware already falls back to passkeys under DEV.
+const isDev = process.env.NODE_ENV === "development";
 
 // The Access application is fixed and neither value is secret: the team domain
 // shows up in every login redirect, and the AUD tag only says which application
@@ -33,7 +30,7 @@ const teamDomain = process.env.CF_ACCESS_TEAM_DOMAIN || "shy-snow-5265.cloudflar
 const audience =
 	process.env.CF_ACCESS_AUD || "a0d488cfb2cef1984c0462c469a257d431bd14fcd736d5dc501bc0efd01e02f9";
 
-const accessAuth = localAuth
+const accessAuth = isDev
 	? undefined
 	: access({
 			teamDomain,

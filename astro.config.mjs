@@ -13,14 +13,6 @@ try {
 	// No .env; the variables may still come from the shell.
 }
 
-// Cloudflare Access authenticates at the edge and EmDash verifies the same JWT
-// on every /_emdash request, so the admin needs no second login. Setting `auth`
-// disables passkeys, and no local server ever receives an Access JWT -- so an
-// anonymous /_emdash/admin would bounce to the production Access page. `astro
-// dev` sets NODE_ENV itself; dropping `auth` there keeps this in step with
-// EmDash, whose middleware already falls back to passkeys under DEV.
-const isDev = process.env.NODE_ENV === "development";
-
 // The Access application is fixed and neither value is secret: the team domain
 // shows up in every login redirect, and the AUD tag only says which application
 // signed a JWT. `access()` bakes both into the bundle at config time, so they
@@ -30,22 +22,20 @@ const teamDomain = process.env.CF_ACCESS_TEAM_DOMAIN || "shy-snow-5265.cloudflar
 const audience =
 	process.env.CF_ACCESS_AUD || "a0d488cfb2cef1984c0462c469a257d431bd14fcd736d5dc501bc0efd01e02f9";
 
-const accessAuth = isDev
-	? undefined
-	: access({
-			teamDomain,
-			audience,
-			// New identities are provisioned at this level. Lowering it is a
-			// one-way door: nobody below Admin can raise themselves back.
-			//
-			// 40 is Editor: all content and taxonomies, but not schemas.
-			defaultRole: 40,
-		});
+const accessAuth = access({
+	teamDomain,
+	audience,
+	// New identities are provisioned at this level. Lowering it is a one-way
+	// door: nobody below Admin can raise themselves back.
+	//
+	// 40 is Editor: all content and taxonomies, but not schemas.
+	defaultRole: 40,
+});
 
 export default defineConfig({
-	// Canonical origin. Without it, absolute URLs (magic-link login, recovery
-	// mail, SEO tags) are built from whichever origin served the request, which
-	// meant login links pointed at the workers.dev URL.
+	// Canonical origin for Astro's own absolute URLs, such as SEO tags. EmDash
+	// does not read this: its outbound mail resolves the origin from
+	// EMDASH_SITE_URL, then the stored `emdash:site_url`, then the request.
 	site: "https://faustinajohnson.com",
 	output: "server",
 	adapter: cloudflare(),
@@ -92,10 +82,9 @@ export default defineConfig({
 	devToolbar: { enabled: false },
 	vite: {
 		server: {
-			// Load-bearing, not housekeeping: miniflare rewrites its D1/R2/KV state
-			// under .wrangler/ on every request, and without this the watcher reads
-			// those writes as source changes and reloads the worker mid-request.
-			// Drop it and `astro dev` 500s or hangs from the first request on.
+			// miniflare rewrites its D1/R2/KV state under .wrangler/ on every
+			// request; without this the watcher reads those writes as source edits
+			// and reloads the worker mid-request, wedging astro dev.
 			watch: { ignored: ["**/.wrangler/**"] },
 		},
 	},

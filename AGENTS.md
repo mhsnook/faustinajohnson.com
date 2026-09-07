@@ -20,23 +20,16 @@ The admin UI is at `/_emdash/admin`, usually on `http://localhost:4321`, and
 admin without a passkey. It is dev-only, so a production build served by
 `preview` has no local way into the admin.
 
-### Ignore `.wrangler/` or `astro dev` falls over
-
-`astro dev` needs one line of config to be usable on this stack:
-
-```js
-vite: { server: { watch: { ignored: ["**/.wrangler/**"] } } }
-```
-
 ### Known dev-mode issues
 
 - **emdash-cms/emdash#2626** (open) -- `getBackend()` parks its in-flight init
   promise on a `globalThis` singleton and never clears it if the request that
   started it is cancelled, so every later request in that isolate awaits a promise
   that will never settle. This is what turned a watcher-triggered reload into a
-  permanent wedge rather than a slow request. Ignoring `.wrangler/` stops the
-  cancellations that trigger it; the bug itself is still there, so a hang after
-  the first request means something else is cancelling requests mid-init.
+  permanent wedge rather than a slow request. `astro.config.mjs` tells vite's
+  watcher to ignore `.wrangler/`, which stops the cancellations that trigger it;
+  the bug itself is still there, so a hang after the first request means
+  something else is cancelling requests mid-init.
 - **emdash-cms/emdash#2572** (open) -- the admin stylesheet 500s under `astro dev`
   (`vite:oxc` parse error on the `?direct` CSS request), so the admin UI is
   unstyled in dev. It loads and works; it just looks wrong.
@@ -200,20 +193,15 @@ EmDash's own core migrations at deploy time, and explicitly not user content mod
 
 The admin is behind Cloudflare Access rather than passkeys: `astro.config.mjs`
 passes `auth: access({ ... })` to `emdash()`, which bakes the team domain and
-the AUD tag into the worker at build time.
+the AUD tag into the worker at build time. That is unconditional -- there is no
+dev variant of the config.
 
-No local server ever receives an Access JWT, so `astro.config.mjs` drops `auth`
-whenever `NODE_ENV` is `development` -- which `astro dev` sets itself. That
-restores passkeys plus the dev-bypass endpoint, and `pnpm dev` needs no flag.
-
-EmDash agrees from its own side: its auth middleware already falls back to
-passkeys when `import.meta.env.DEV`, whatever `auth` says. Dropping `auth` in
-dev keeps the two in step, so an anonymous `/_emdash/admin` reaches the local
-setup screen rather than the production Access login.
-
-A production build is `NODE_ENV=production` even when `preview` serves it
-locally, so it carries the real Access config and its admin is not reachable
-from localhost.
+Locally it does not get in the way, because EmDash's request middleware falls
+back to passkeys under `import.meta.env.DEV` whatever `auth` says. So under
+`pnpm dev` the dev-bypass URL signs you in and the admin works. Open
+`/_emdash/admin` anonymously and you will be redirected to the real Access
+login instead, since the login UI reads the configured auth mode -- go through
+dev-bypass rather than the bare admin URL.
 
 Both values are literals in `astro.config.mjs`, and `CF_ACCESS_TEAM_DOMAIN` /
 `CF_ACCESS_AUD` override them from `.env` or the shell -- that is what

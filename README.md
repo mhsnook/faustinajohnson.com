@@ -47,7 +47,7 @@ Other scripts: `pnpm build`, `pnpm preview`, `pnpm typecheck`.
 The deployed admin sits behind Cloudflare Access, so signing in at the edge is
 the only sign-in. It needs `CF_ACCESS_TEAM_DOMAIN` and `CF_ACCESS_AUD` in
 `.env` (see `.env.example`) and one Access application over the site. Locally,
-`pnpm dev` drops Access so the admin is reachable without a JWT.
+EmDash falls back to passkeys in dev, so the dev-bypass URL signs you in.
 
 Setting up that application, the identity and role model, and how to add people
 are in [docs/auth.md](docs/auth.md).

@@ -37,7 +37,7 @@ different AUD, and only one of them can match `CF_ACCESS_AUD`.
 ## Roles
 
 `defaultRole` in `astro.config.mjs` sets what a newly seen identity is
-provisioned as. It is currently 50, the highest: Admin.
+provisioned as. It is currently 40: Editor.
 
 | Level | Role        |
 | ----- | ----------- |
@@ -58,15 +58,17 @@ EmDash's own invite flow is passkey registration, so it has no role here.
 
 ## Local development
 
-`astro.config.mjs` drops `auth` when `NODE_ENV` is `development`, which `astro
-dev` sets itself, so the local admin needs no Access JWT and no flag:
+The config sets Access unconditionally, and EmDash's middleware ignores it
+under `import.meta.env.DEV`, so a dev server needs no flag and no variant
+config:
 
 ```bash
 pnpm dev
 # then: /_emdash/api/setup/dev-bypass?redirect=/_emdash/admin
 ```
 
-Dev-bypass is dev-only. A production build carries the real Access config, so
+Use that URL rather than `/_emdash/admin`, which sends an anonymous visitor to
+the real Access login. Dev-bypass is dev-only, so a production build served by
 `astro preview` has no local way into the admin.
 
 ## The CLI

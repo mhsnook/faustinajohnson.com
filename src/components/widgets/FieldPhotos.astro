@@ -8,20 +8,17 @@ interface Props {
 	href?: string;
 }
 
-const { title = "from the field", caption = "", href = "/posts" } = Astro.props;
+const { title = "from the field", caption = "", href = "/images" } = Astro.props;
 
-// The rail borrows lead images from the most recent pieces, so it fills itself
-// as the editor publishes rather than needing its own uploads.
-const { entries, cacheHint } = await getEmDashCollection("posts", {
+const { entries, cacheHint } = await getEmDashCollection("images", {
 	status: "published",
 	limit: 4,
-	orderBy: { published_on: "desc" },
+	orderBy: { taken_on: "desc" },
 });
 if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
 
-const withImages = entries.filter((entry) => entry.data.featured_image);
-const lead = withImages[0] ?? null;
-const thumbs = withImages.slice(1, 4);
+const lead = entries[0] ?? null;
+const thumbs = entries.slice(1, 4);
 const thumbSlots = Array.from({ length: 3 }, (_, i) => thumbs[i] ?? null);
 ---
 
@@ -30,7 +27,15 @@ const thumbSlots = Array.from({ length: 3 }, (_, i) => thumbs[i] ?? null);
 	<a class="ff__all" href={href}>all →</a>
 </div>
 
-<Frame image={lead?.data.featured_image ?? null} ratio="4/3" label={"photo\ntreeline, dusk"} />
+{
+	lead ? (
+		<a href={`/images/${lead.id}`}>
+			<Frame image={lead.data.image} ratio="4/3" label={"photo\ntreeline, dusk"} />
+		</a>
+	) : (
+		<Frame image={null} ratio="4/3" label={"photo\ntreeline, dusk"} />
+	)
+}
 
 {caption && <p class="ff__caption">{caption}</p>}
 
@@ -39,8 +44,8 @@ const thumbSlots = Array.from({ length: 3 }, (_, i) => thumbs[i] ?? null);
 		thumbSlots.map((entry) => {
 			const Tag = entry ? "a" : "span";
 			return (
-				<Tag class="ff__thumb" href={entry ? `/posts/${entry.id}` : undefined}>
-					<Frame image={entry?.data.featured_image ?? null} ratio="1/1" />
+				<Tag class="ff__thumb" href={entry ? `/images/${entry.id}` : undefined}>
+					<Frame image={entry?.data.image ?? null} ratio="1/1" />
 				</Tag>
 			);
 		})

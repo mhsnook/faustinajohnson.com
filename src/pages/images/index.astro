@@ -1,0 +1,64 @@
+---
+import { getEmDashCollection } from "emdash";
+import Frame from "../../components/Frame.astro";
+import SectionHead from "../../components/SectionHead.astro";
+import Base from "../../layouts/Base.astro";
+
+const { entries: images, cacheHint } = await getEmDashCollection("images", {
+	status: "published",
+	orderBy: { taken_on: "desc" },
+});
+if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
+---
+
+<Base title="Images" heroTitle="Images" heroKicker="the wall">
+	<section class="panel">
+		<SectionHead title="Every Image" meta={`${images.length} in total`} rule="dim" />
+		{
+			images.length === 0 ? (
+				<p class="empty">
+					Nothing here yet. <a href="/_emdash/admin/content/images/new">Add the first one</a>.
+				</p>
+			) : (
+				<div class="wall">
+					{images.map((entry) => (
+						<a class="plate" href={`/images/${entry.id}`}>
+							<Frame image={entry.data.image} ratio="4/3" label={"photo\nno image set"} />
+							<div class="plate__title">{entry.data.title}</div>
+							{entry.data.location && <div class="kicker plate__where">{entry.data.location}</div>}
+						</a>
+					))}
+				</div>
+			)
+		}
+	</section>
+</Base>
+
+<style>
+	.wall {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+		gap: 16px;
+	}
+
+	.plate {
+		display: block;
+		color: inherit;
+	}
+
+	.plate__title {
+		margin-top: 8px;
+		font-family: var(--font-display);
+		font-size: 18px;
+		line-height: 1.2;
+		color: var(--parchment-3);
+	}
+
+	.plate:hover .plate__title {
+		color: var(--parchment);
+	}
+
+	.plate__where {
+		margin-top: 3px;
+	}
+</style>

@@ -36,7 +36,9 @@ const accessAuth = localAuth
 			audience,
 			// New identities are provisioned at this level. Lowering it is a
 			// one-way door: nobody below Admin can raise themselves back.
-			defaultRole: 50,
+			//
+			// 40 is Editor: all content and taxonomies, but not schemas.
+			defaultRole: 40,
 		});
 
 export default defineConfig({

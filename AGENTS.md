@@ -6,6 +6,7 @@ This is an EmDash site -- a CMS built on Astro with a full admin UI.
 pnpm build && pnpm preview         # Run the site -- see "Use astro preview" below
 pnpm build:local && pnpm preview   # Same, with a reachable admin UI
 npx emdash types                   # Regenerate TypeScript types from a running site
+pnpm schema:push --url URL --dry-run      # Push seed/seed.json's schema to a live site
 
 pnpm typecheck                     # astro check
 pnpm lint                          # oxlint            (--fix available as lint:fix)
@@ -180,8 +181,43 @@ This template ships with `.mcp.json`, `.cursor/mcp.json`, and `.vscode/mcp.json`
 - `entry.id` is the slug (for URLs). `entry.data.id` is the database ULID (for API calls like `getEntryTerms`).
 - Always call `Astro.cache.set(cacheHint)` on pages that query content.
 - Taxonomy names in queries must match the seed's `"name"` field exactly (e.g., `"category"` not `"categories"`).
+- `seed/seed.json` only applies to an EMPTY database. A collection or field added to it
+  never reaches a site that already has content -- use `pnpm schema:push` for that. It
+  reads the seed, diffs it against a running site, and creates only what is missing.
 - `pnpm-workspace.yaml` sets `better-sqlite3: false`, so `npx emdash seed` cannot open a database. Seed by starting the dev server, which applies `seed/seed.json` and regenerates `emdash-env.d.ts`. Do not flip that flag -- it is a deliberate supply-chain setting.
 - Custom design tokens go in `theme.css` as global classes; per-page layout goes in that page's scoped `<style>` block.
+
+## Pushing a schema change to a live site
+
+`seed/seed.json` only ever runs against an empty database, on the first request after
+setup completes. It is the starting shape, not a migration -- a collection added to it
+reaches a fresh database and never an existing one, with no warning either way.
+
+`pnpm schema:push` closes that gap. It reads the seed, diffs it against a running
+site's schema over the REST API, and creates what is missing.
+
+```bash
+pnpm schema:push --url https://faustinajohnson.com --dry-run   # show the plan
+pnpm schema:push --url https://faustinajohnson.com             # apply it
+npx emdash types --url https://faustinajohnson.com             # refresh the types
+```
+
+It only ever adds. A collection or field the live site has and the seed does not is
+left alone; a field whose type has drifted is reported, not corrected. A collection
+whose `supports` include `search` also gets its index built -- creating a collection
+over the API records the support without the `_emdash_fts_<slug>` table behind it, so
+it would otherwise be searchable in name only. Menu links are appended, never
+rewritten: `applySeed` deletes a menu's items and rebuilds them from the seed, and
+overwrites site settings unconditionally, so this does not use it. Running it twice
+is safe.
+
+The credential has to be an **admin**. `schema:manage` is Admin (50); everything an
+editor does day to day is 40 or below, which is why `access()` provisions at 40. Pass
+`--token` with an `ec_pat_`, or set `EMDASH_HEADERS` to the Cloudflare Access service
+token pair, since the admin sits behind Access.
+
+`npx emdash migrate` is a different thing and does not replace this: it applies
+EmDash's own core migrations at deploy time, and explicitly not user content models.
 
 ## Admin login
 
@@ -261,6 +297,8 @@ call to action. Every other route reuses the same shell.
 | Piece detail  | `/posts/[slug]`    | One long-form piece                                    |
 | Field notes   | `/notes`           | Every field note, newest first                         |
 | Note detail   | `/notes/[slug]`    | One field note                                         |
+| Images        | `/images`          | Every image entry, newest first                        |
+| Image detail  | `/images/[slug]`   | One image entry -- main image, MIDI, gallery           |
 | Page          | `/[slug]`          | A standalone page (e.g. `/about`, `/method`)           |
 | Category      | `/category/[slug]` | Pieces filtered by category                            |
 | Tag           | `/tag/[slug]`      | Pieces filtered by tag                                 |
@@ -272,6 +310,10 @@ call to action. Every other route reuses the same shell.
 - `notes` (labelled "Field Notes"): `title`, `note_date` (datetime), `content`.
   `note_date` drives both the printed dateline and the sort order.
 - `tenets` (labelled "Method"): `title`, `numeral`, `body`, `sort_order`. Three entries render the Method grid.
+- `images`: `title`, `image` (required, the one every preview uses), `caption`, `location`,
+  `taken_on` (datetime, the sort key), `midi` (file), `gallery` (repeater of image + caption).
+  One entry is one subject, not one file: the extra views live in `gallery` and show only
+  on the entry's own page.
 - `pages`: `title`, `kicker`, `portrait` (image), `content`.
   `/about` supplies the home page bio; `/method` supplies the Method heading and pull quote;
   `/correspondence` supplies the closing block.
@@ -290,6 +332,8 @@ The decorative rails are widget areas, so they are editable in the admin UI:
 | `marquee`   | Top bar        | Ticker lines -- one paragraph per item                 |
 | `rail-left` | Left column    | The candle                                             |
 | `rail`      | Right column   | Now playing, On the desk, Appeared in, From the field  |
+
+`site:field-photos` ("From the field") renders the four newest `images` entries.
 
 `WidgetRenderer.astro` dispatches on `componentId`. Custom components are prefixed
 `site:` (`site:candle`, `site:now-playing`, `site:publications`, `site:field-photos`);

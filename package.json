@@ -10,6 +10,7 @@
 		"preview": "astro preview",
 		"deploy": "astro build && wrangler deploy",
 		"typecheck": "astro check",
+		"schema:push": "node scripts/push-schema.mjs",
 		"lint": "oxlint",
 		"lint:fix": "oxlint --fix",
 		"format": "lint-staged --diff=HEAD",
@@ -26,6 +27,7 @@
 		"@emdash-cms/cloudflare": "^0.36.0",
 		"astro": "^7.2.10",
 		"emdash": "^0.36.0",
+		"html-midi-player": "^1.6.0",
 		"react": "19.2.4",
 		"react-dom": "19.2.4"
 	},

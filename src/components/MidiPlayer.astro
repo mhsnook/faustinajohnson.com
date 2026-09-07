@@ -1,0 +1,50 @@
+---
+interface Props {
+	src: string;
+	filename?: string | null;
+}
+
+const { src, filename } = Astro.props;
+
+const SOUND_FONT = "https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus";
+---
+
+<div class="panel panel--sunk midi">
+	<div class="kicker kicker--flame midi__label">♫ the recording</div>
+	<midi-player src={src} sound-font={SOUND_FONT} class="midi__player">
+		<a class="midi__fallback" href={src} download={filename ?? undefined}> download the midi </a>
+	</midi-player>
+</div>
+
+<script>
+	const load = () => import("html-midi-player");
+	if (document.querySelector("midi-player")) {
+		if ("requestIdleCallback" in window) requestIdleCallback(() => load());
+		else setTimeout(load, 1);
+	}
+</script>
+
+<style>
+	.midi {
+		padding: 14px 16px;
+		margin: 22px 0;
+	}
+
+	.midi__label {
+		display: block;
+		margin-bottom: 10px;
+	}
+
+	.midi__player {
+		display: block;
+		width: 100%;
+	}
+
+	.midi__fallback {
+		font-family: var(--font-mono);
+		font-size: 11px;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--gold);
+	}
+</style>

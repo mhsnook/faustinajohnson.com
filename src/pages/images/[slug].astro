@@ -1,0 +1,127 @@
+---
+import { decodeSlug, getEmDashEntry, getSeoMeta, getSiteSettings } from "emdash";
+import Frame from "../../components/Frame.astro";
+import MidiPlayer from "../../components/MidiPlayer.astro";
+import Base from "../../layouts/Base.astro";
+import { formatLongDate } from "../../utils/dates";
+import { resolveStarterSiteIdentity } from "../../utils/site-identity";
+
+const slug = decodeSlug(Astro.params.slug);
+
+if (!slug) {
+	return Astro.redirect("/404");
+}
+
+const { entry: image, cacheHint } = await getEmDashEntry("images", slug);
+
+if (!image) {
+	return Astro.redirect("/404");
+}
+
+if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
+const { siteTitle } = resolveStarterSiteIdentity(await getSiteSettings());
+
+const seo = getSeoMeta(image, {
+	siteTitle,
+	siteUrl: Astro.url.origin,
+	path: `/images/${slug}`,
+});
+
+const midi = image.data.midi;
+const midiSrc = midi?.src ?? midi?.url ?? null;
+
+const gallery = image.data.gallery ?? [];
+
+const dateline = formatLongDate(image.data.taken_on);
+const meta = [dateline, image.data.location].filter(Boolean).join(" · ");
+---
+
+<Base
+	title={seo.title}
+	pageTitle={seo.ogTitle}
+	description={seo.description}
+	canonical={seo.canonical}
+	image={seo.ogImage}
+	content={{ collection: "images", id: image.data.id, slug }}
+	heroTitle={image.data.title}
+	heroKicker={meta || "an image"}
+>
+	<article class="panel">
+		<div {...image.edit.image}>
+			<Frame image={image.data.image} ratio="4/3" label={"photo\nno image set"} />
+		</div>
+
+		<h1 class="image-page__title" {...image.edit.title}>{image.data.title}</h1>
+		{meta && <div class="kicker kicker--flame">{meta}</div>}
+
+		{
+			image.data.caption && (
+				<p class="lede image-page__caption" {...image.edit.caption}>
+					{image.data.caption}
+				</p>
+			)
+		}
+
+		{midiSrc && <MidiPlayer src={midiSrc} filename={midi?.filename} />}
+
+		{
+			gallery.length > 0 && (
+				<div class="image-page__more">
+					{gallery.map((item) => (
+						<figure class="image-page__plate">
+							<Frame image={item.image} ratio="1/1" />
+							{item.caption && <figcaption>{item.caption}</figcaption>}
+						</figure>
+					))}
+				</div>
+			)
+		}
+
+		<a class="image-page__back" href="/images">← all images</a>
+	</article>
+</Base>
+
+<style>
+	.image-page__title {
+		margin: 18px 0 4px;
+		font-family: var(--font-display);
+		font-size: clamp(24px, 4vw, 32px);
+		line-height: 1.12;
+		font-weight: 400;
+		color: var(--parchment);
+	}
+
+	.image-page__caption {
+		margin: 14px 0 0;
+	}
+
+	.image-page__more {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+		gap: 12px;
+		margin-top: 22px;
+	}
+
+	.image-page__plate {
+		margin: 0;
+	}
+
+	.image-page__plate figcaption {
+		margin-top: 6px;
+		font-family: var(--font-mono);
+		font-size: 10px;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--muted-2);
+	}
+
+	.image-page__back {
+		display: inline-block;
+		margin-top: 24px;
+		font-family: var(--font-mono);
+		font-size: 11px;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--muted-2);
+	}
+</style>

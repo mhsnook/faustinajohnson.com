@@ -25,18 +25,11 @@ const audience =
 const accessAuth = access({
 	teamDomain,
 	audience,
-	// New identities are provisioned at this level. Lowering it is a one-way
-	// door: nobody below Admin can raise themselves back.
-	//
 	// 40 is Editor: all content and taxonomies, but not schemas.
 	defaultRole: 40,
 });
 
 export default defineConfig({
-	// Canonical origin for Astro's own absolute URLs, such as SEO tags. EmDash
-	// does not read this: its outbound mail resolves the origin from
-	// EMDASH_SITE_URL, then the stored `emdash:site_url`, then the request.
-	site: "https://faustinajohnson.com",
 	output: "server",
 	adapter: cloudflare(),
 	image: {

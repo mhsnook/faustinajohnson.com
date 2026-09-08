@@ -317,6 +317,9 @@ call to action. Every other route reuses the same shell.
 - `pages`: `title`, `kicker`, `portrait` (image), `content`.
   `/about` supplies the home page bio; `/method` supplies the Method heading and pull quote;
   `/correspondence` supplies the closing block.
+- `snippets`: `title`, `body`, `group`, `sort_order`. One short piece of copy per entry,
+  read by slug. `footer-tagline` and `footer-signoff` are the two lines at the foot of
+  every page. `group` and `sort_order` are indexed, for chrome that renders a list.
 - Taxonomies: `category` (hierarchical), `tag`.
 - Menus: `primary` ("the rooms" nav) and `correspondence` (the two closing buttons).
 

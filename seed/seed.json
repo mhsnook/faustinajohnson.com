@@ -124,6 +124,43 @@
 			]
 		},
 		{
+			"slug": "snippets",
+			"label": "Snippets",
+			"labelSingular": "Snippet",
+			"supports": ["drafts", "revisions"],
+			"fields": [
+				{
+					"slug": "title",
+					"label": "Title",
+					"type": "string",
+					"required": true,
+					"options": {
+						"help": "Names the snippet in the admin list. The site renders the body, never this."
+					}
+				},
+				{
+					"slug": "body",
+					"label": "Body",
+					"type": "text",
+					"options": { "rows": 2, "help": "The line as it appears on the site." }
+				},
+				{
+					"slug": "group",
+					"label": "Group",
+					"type": "string",
+					"indexed": true,
+					"options": { "help": "Which part of the site the snippet belongs to, e.g. \"footer\"." }
+				},
+				{
+					"slug": "sort_order",
+					"label": "Order",
+					"type": "integer",
+					"indexed": true,
+					"options": { "help": "Order within the group, for the areas that render a list." }
+				}
+			]
+		},
+		{
 			"slug": "pages",
 			"label": "Pages",
 			"labelSingular": "Page",
@@ -421,6 +458,30 @@
 		}
 	],
 	"content": {
+		"snippets": [
+			{
+				"id": "footer-tagline",
+				"slug": "footer-tagline",
+				"status": "published",
+				"data": {
+					"title": "Footer tagline",
+					"group": "footer",
+					"sort_order": 1,
+					"body": "faustina johnson · the valley · all pieces their own"
+				}
+			},
+			{
+				"id": "footer-signoff",
+				"slug": "footer-signoff",
+				"status": "published",
+				"data": {
+					"title": "Footer signoff",
+					"group": "footer",
+					"sort_order": 2,
+					"body": "thank you for reading slowly"
+				}
+			}
+		],
 		"pages": [
 			{
 				"id": "about",

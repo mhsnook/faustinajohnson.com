@@ -1,11 +1,12 @@
 ---
 import { Font } from "astro:assets";
-import { getMenu, getSiteSettings, getWidgetArea } from "emdash";
+import { getEmDashCollection, getMenu, getSiteSettings, getWidgetArea } from "emdash";
 import { createPublicPageContext } from "emdash/page";
 import { EmDashBodyEnd, EmDashBodyStart, EmDashHead } from "emdash/ui";
 import Marquee from "../components/Marquee.astro";
 import Rail from "../components/Rail.astro";
 import { resolveStarterSiteIdentity } from "../utils/site-identity";
+import { readSnippets } from "../utils/snippets";
 import "../styles/theme.css";
 
 interface Props {
@@ -39,15 +40,23 @@ const {
 // One batch instead of a chain. The three widget areas are warmed here on
 // purpose: getWidgetArea is request-cached, and the right rail renders after
 // <slot />, so without this its query cannot start until the main column is done.
-const [settings, menu] = await Promise.all([
+const [settings, menu, { entries: snippets, cacheHint: snippetsHint }] = await Promise.all([
 	getSiteSettings(),
 	getMenu("primary"),
+	getEmDashCollection("snippets", { status: "published" }),
 	getWidgetArea("marquee"),
 	getWidgetArea("rail-left"),
 	getWidgetArea("rail"),
 ]);
 
 const { siteTitle, siteTagline, siteLogo } = resolveStarterSiteIdentity(settings);
+
+const snippet = readSnippets(snippets);
+
+if (Astro.cache?.enabled) {
+	Astro.cache.set(snippetsHint);
+}
+
 const fullTitle = title.includes(siteTitle) ? title : `${title} — ${siteTitle}`;
 const pageDescription = description ?? siteTagline;
 
@@ -137,10 +146,8 @@ const pageCtx = createPublicPageContext({
 		</div>
 
 		<footer class="footer">
-			<div class="footer__line">
-				faustina johnson · the valley · all pieces their own
-			</div>
-			<div class="footer__sign">thank you for reading slowly</div>
+			<div class="footer__line">{snippet("footer-tagline")}</div>
+			<div class="footer__sign">{snippet("footer-signoff")}</div>
 		</footer>
 
 		<EmDashBodyEnd page={pageCtx} />

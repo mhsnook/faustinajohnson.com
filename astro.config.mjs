@@ -67,7 +67,7 @@ export default defineConfig({
 				// console stub, so magic-link login and recovery mail fail with
 				// "Email is not configured". Activate under Admin -> Extensions.
 				cloudflareEmail({
-					from: { email: "cms@mail.faustinajohnson.com", name: "Faustina Johnson" },
+					from: { email: "cms@mail.faustinajohnson.com", name: "Faustina Website" },
 				}),
 			],
 		}),

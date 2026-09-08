@@ -13,13 +13,6 @@ try {
 	// No .env; the variables may still come from the shell.
 }
 
-// Cloudflare Access authenticates at the edge and EmDash verifies the same JWT
-// on every /_emdash request, so the admin needs no second login. Setting `auth`
-// disables passkeys, and the Access JWT never reaches a local build -- hence
-// EMDASH_LOCAL_AUTH=1. Retire that flag once emdash gates its passkey fallback
-// on something other than `import.meta.env.DEV`, which a preview build is not.
-const localAuth = process.env.EMDASH_LOCAL_AUTH === "1";
-
 // The Access application is fixed and neither value is secret: the team domain
 // shows up in every login redirect, and the AUD tag only says which application
 // signed a JWT. `access()` bakes both into the bundle at config time, so they
@@ -29,23 +22,14 @@ const teamDomain = process.env.CF_ACCESS_TEAM_DOMAIN || "shy-snow-5265.cloudflar
 const audience =
 	process.env.CF_ACCESS_AUD || "a0d488cfb2cef1984c0462c469a257d431bd14fcd736d5dc501bc0efd01e02f9";
 
-const accessAuth = localAuth
-	? undefined
-	: access({
-			teamDomain,
-			audience,
-			// New identities are provisioned at this level. Lowering it is a
-			// one-way door: nobody below Admin can raise themselves back.
-			//
-			// 40 is Editor: all content and taxonomies, but not schemas.
-			defaultRole: 40,
-		});
+const accessAuth = access({
+	teamDomain,
+	audience,
+	// 40 is Editor: all content and taxonomies, but not schemas.
+	defaultRole: 40,
+});
 
 export default defineConfig({
-	// Canonical origin. Without it, absolute URLs (magic-link login, recovery
-	// mail, SEO tags) are built from whichever origin served the request, which
-	// meant login links pointed at the workers.dev URL.
-	site: "https://faustinajohnson.com",
 	output: "server",
 	adapter: cloudflare(),
 	image: {
@@ -83,10 +67,16 @@ export default defineConfig({
 				// console stub, so magic-link login and recovery mail fail with
 				// "Email is not configured". Activate under Admin -> Extensions.
 				cloudflareEmail({
-					from: { email: "cms@mail.faustinajohnson.com", name: "Faustina Johnson" },
+					from: { email: "cms@mail.faustinajohnson.com", name: "Faustina Website" },
 				}),
 			],
 		}),
 	],
 	devToolbar: { enabled: false },
+	vite: {
+		server: {
+			// Needed until cloudflare/workers-sdk issue #15550.
+			watch: { ignored: ["**/.wrangler/**"] },
+		},
+	},
 });

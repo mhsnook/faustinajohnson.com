@@ -111,27 +111,56 @@ a:hover {
 /* ---------- Motion ---------- */
 
 @keyframes flick {
-	0%, 100% { opacity: 0.92; }
-	18% { opacity: 1; }
-	37% { opacity: 0.78; }
-	52% { opacity: 0.98; }
-	68% { opacity: 0.84; }
-	83% { opacity: 1; }
+	0%,
+	100% {
+		opacity: 0.92;
+	}
+	18% {
+		opacity: 1;
+	}
+	37% {
+		opacity: 0.78;
+	}
+	52% {
+		opacity: 0.98;
+	}
+	68% {
+		opacity: 0.84;
+	}
+	83% {
+		opacity: 1;
+	}
 }
 
 @keyframes breathe {
-	0%, 100% { opacity: 0.55; transform: scale(1); }
-	50% { opacity: 0.85; transform: scale(1.06); }
+	0%,
+	100% {
+		opacity: 0.55;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 0.85;
+		transform: scale(1.06);
+	}
 }
 
 @keyframes eq {
-	0%, 100% { height: 3px; }
-	50% { height: 14px; }
+	0%,
+	100% {
+		height: 3px;
+	}
+	50% {
+		height: 14px;
+	}
 }
 
 @keyframes crawl {
-	0% { transform: translateX(0); }
-	100% { transform: translateX(-50%); }
+	0% {
+		transform: translateX(0);
+	}
+	100% {
+		transform: translateX(-50%);
+	}
 }
 
 /* The candle flicker and the title glow pulse are decorative. Photosensitive
@@ -155,9 +184,15 @@ a:hover {
 	color: var(--ember);
 }
 
-.kicker--flame { color: var(--flame); }
-.kicker--muted { color: var(--muted-2); }
-.kicker--wide { letter-spacing: 0.32em; }
+.kicker--flame {
+	color: var(--flame);
+}
+.kicker--muted {
+	color: var(--muted-2);
+}
+.kicker--wide {
+	letter-spacing: 0.32em;
+}
 
 .lede {
 	font-size: 19px;
@@ -187,8 +222,12 @@ a:hover {
 	margin: 26px 0 10px;
 }
 
-.prose h2 { font-size: 27px; }
-.prose h3 { font-size: 21px; }
+.prose h2 {
+	font-size: 27px;
+}
+.prose h3 {
+	font-size: 21px;
+}
 
 .prose a {
 	color: var(--gold);
@@ -280,7 +319,11 @@ a:hover {
 /* Hatched fill stands in for an image the editor has not uploaded yet. */
 .frame__empty {
 	background-color: var(--well-top);
-	background-image: repeating-linear-gradient(135deg, rgba(255, 190, 110, 0.09) 0 3px, transparent 3px 8px);
+	background-image: repeating-linear-gradient(
+		135deg,
+		rgba(255, 190, 110, 0.09) 0 3px,
+		transparent 3px 8px
+	);
 	display: flex;
 	align-items: flex-end;
 	padding: 7px;
@@ -308,14 +351,18 @@ a:hover {
 	background: linear-gradient(var(--chip-top), var(--chip-bottom));
 	border: 2px solid;
 	border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-darker) var(--bevel-mid);
-	box-shadow: inset 0 1px 0 rgba(255, 214, 160, 0.13), 0 2px 0 #000;
+	box-shadow:
+		inset 0 1px 0 rgba(255, 214, 160, 0.13),
+		0 2px 0 #000;
 }
 
 .chip:hover,
 .chip[aria-current="page"] {
 	color: var(--gold-hover);
 	background: linear-gradient(#241a14, #130e0b);
-	box-shadow: inset 0 0 18px rgba(255, 150, 60, 0.22), 0 2px 0 #000;
+	box-shadow:
+		inset 0 0 18px rgba(255, 150, 60, 0.22),
+		0 2px 0 #000;
 }
 
 .btn {
@@ -329,25 +376,33 @@ a:hover {
 	background: linear-gradient(var(--chip-top), var(--chip-bottom));
 	border: 2px solid;
 	border-color: var(--bevel-light) var(--bevel-dark) var(--bevel-darker) var(--bevel-mid);
-	box-shadow: inset 0 1px 0 rgba(255, 214, 160, 0.13), 0 2px 0 #000;
+	box-shadow:
+		inset 0 1px 0 rgba(255, 214, 160, 0.13),
+		0 2px 0 #000;
 }
 
 .btn:hover {
 	color: var(--gold-hover);
-	box-shadow: inset 0 0 18px rgba(255, 150, 60, 0.22), 0 2px 0 #000;
+	box-shadow:
+		inset 0 0 18px rgba(255, 150, 60, 0.22),
+		0 2px 0 #000;
 }
 
 .btn--ember {
 	color: #f5e3c6;
 	background: linear-gradient(var(--crimson-top), var(--crimson-bottom));
 	border-color: #c05a3f #3a0d07 #350c06 #a8452e;
-	box-shadow: inset 0 1px 0 rgba(255, 200, 160, 0.3), 0 2px 0 #000;
+	box-shadow:
+		inset 0 1px 0 rgba(255, 200, 160, 0.3),
+		0 2px 0 #000;
 }
 
 .btn--ember:hover {
 	color: #fff;
 	background: linear-gradient(#a82c1c, #6d190f);
-	box-shadow: inset 0 0 20px rgba(255, 190, 120, 0.3), 0 2px 0 #000;
+	box-shadow:
+		inset 0 0 20px rgba(255, 190, 120, 0.3),
+		0 2px 0 #000;
 }
 
 /* ---------- Section headings ---------- */
@@ -522,4 +577,3 @@ a:hover {
 }
 
 /* ---------- Utility ---------- */
-

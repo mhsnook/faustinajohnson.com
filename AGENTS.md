@@ -3,8 +3,8 @@ This is an EmDash site -- a CMS built on Astro with a full admin UI.
 ## Commands
 
 ```bash
-pnpm build && pnpm preview         # Run the site -- see "Use astro preview" below
-pnpm build:local && pnpm preview   # Same, with a reachable admin UI
+pnpm dev                           # Dev server with HMR, usually at localhost:4321
+pnpm build && pnpm preview         # Production build, served locally
 npx emdash types                   # Regenerate TypeScript types from a running site
 pnpm schema:push --url URL --dry-run      # Push seed/seed.json's schema to a live site
 
@@ -14,50 +14,25 @@ pnpm format                        # changed files    (:staged, :all, :check)
 pnpm test                          # vitest run        (test:watch to watch)
 ```
 
-`pnpm dev` starts, serves one request, and then wedges. Use `pnpm preview`.
+The admin UI is at `/_emdash/admin`, usually on `http://localhost:4321`, and
+`pnpm dev` reaches it with no extra flag -- see "Admin login" below.
+`/_emdash/api/setup/dev-bypass?redirect=/_emdash/admin` signs you in as an
+admin without a passkey. It is dev-only, so a production build served by
+`preview` has no local way into the admin.
 
-The admin UI is at `http://localhost:4321/_emdash/admin`, and reaching it locally
-takes `pnpm build:local` -- see "Admin login" below. Under `build:local`,
-`/_emdash/api/setup/dev-bypass?redirect=/_emdash/admin` signs you in as an admin
-without a passkey.
+### Known dev-mode issues
 
-### Use `astro preview`, not `astro dev`
-
-`astro dev` is currently unusable on this stack (emdash 0.35.0 + astro 7.2.9 +
-@astrojs/cloudflare + workerd). It serves the first request and then hangs or 500s
-every request after, while burning 50-90% CPU. Measured on the same worker, same
-D1, same bindings:
-
-| | `astro dev` | `astro preview` |
-| --- | --- | --- |
-| First request | 200 in 7.0s | 200 in 0.22s |
-| Second request | hang, then 500 | 200 in 0.09s |
-| Later requests | dead | 200 in ~0.09s |
-| Idle CPU / RSS | 53-90% / 1.1-2.1GB | 34% / 544MB |
-
-So the working loop is a rebuild, which costs about ten seconds:
-
-```bash
-pnpm build:local && pnpm preview          # localhost:4321
-pnpm build:local && pnpm preview --host   # also on the LAN
-```
-
-There is no HMR. Rebuild to see a change.
-
-### HMR not working
-
-Tracked as [#3](https://github.com/mhsnook/faustinajohnson.com/issues/3) -- close
-that when the dev loop can go back to HMR.
-
-`astro dev` serves its first request and then hangs, silently -- no error, no
-panic, nothing in the log after the first `[200] /`. That is
-**emdash-cms/emdash#2626** (open): `getBackend()` parks its in-flight init promise
-on a `globalThis` singleton and never clears it if the request that started it is
-cancelled, so every later request in the isolate awaits a promise that will never
-settle. Affects 0.34.0 through 0.36.0.
-
-Two related issues are already handled and need no workaround here:
-
+- **emdash-cms/emdash#2626** (open) -- `getBackend()` parks its in-flight init
+  promise on a `globalThis` singleton and never clears it if the request that
+  started it is cancelled, so every later request in that isolate awaits a promise
+  that will never settle. This is what turned a watcher-triggered reload into a
+  permanent wedge rather than a slow request. `astro.config.mjs` tells vite's
+  watcher to ignore `.wrangler/`, which stops the cancellations that trigger it;
+  the bug itself is still there, so a hang after the first request means
+  something else is cancelling requests mid-init.
+- **emdash-cms/emdash#2572** (open) -- the admin stylesheet 500s under `astro dev`
+  (`vite:oxc` parse error on the `?direct` CSS request), so the admin UI is
+  unstyled in dev. It loads and works; it just looks wrong.
 - **withastro/astro#17868** -- an unresolvable specifier inside workerd threw an
   uncaught exception, panicked the process, broke the IPC pipe, and corrupted
   Astro's route registry. It surfaced as `Unable to resolve
@@ -68,20 +43,15 @@ Two related issues are already handled and need no workaround here:
   `astro.config.mjs`; it was removed after two cold starts on the current
   versions showed zero panics, zero reloads, and zero late dep discoveries. Put
   it back only if those reappear.
-- **emdash-cms/emdash#2572** (open) -- the admin stylesheet 500s under `astro dev`
-  (`vite:oxc` parse error on the `?direct` CSS request), so the admin UI is
-  unstyled in dev.
 
 ### Seeding a fresh database
 
 Content seeds when setup completes, and the dev-bypass endpoint that completes it
-is dev-only. `astro dev` reliably serves exactly one request, which is enough:
+is dev-only:
 
 ```bash
-npx astro dev
+pnpm dev
 curl -L "http://127.0.0.1:4321/_emdash/api/setup/dev-bypass?redirect=/_emdash/admin"
-npx astro dev stop
-pnpm build:local && npx astro preview --host 0.0.0.0
 ```
 
 ### Run only one dev server
@@ -129,23 +99,9 @@ so Prettier with `prettier-plugin-astro` formats the 24 `.astro` files and oxfmt
 formats everything else. Each reads its own ignore file, `.oxfmtignore` and
 `.prettierignore`, so the two never rewrite the same file.
 
-Three scopes. The first two run through `lint-staged`, so each file goes to
-whichever of the two formatters owns it:
-
-| Script                | Formats                                          |
-| --------------------- | ------------------------------------------------ |
-| `pnpm format`         | everything changed against HEAD, staged or not   |
-| `pnpm format:staged`  | only what is staged                              |
-| `pnpm format:all`     | the whole repo                                   |
-
-`format` reaches a new file once you `git add` it; before that only
-`format:all` sees it, because `git diff` does not list untracked files.
-
-The pre-commit hook is husky calling `pnpm format:staged`, so a file ships
-formatted whether or not anyone remembered to run it -- the same footprint the
-`touched-clean` gate measures. Prefer it over `format:all`, which also rewrites
-everything that pre-dates the formatter (`seed/seed.json`, `src/styles/theme.css`
-and five `.astro` files) and buries your change in the diff.
+- `pnpm format` formats everything changed against the HEAD
+- `pnpm format:staged` formats only what is staged, runs on pre-commit
+- `pnpm format:all`
 
 ## Key Files
 
@@ -156,8 +112,8 @@ and five `.astro` files) and buries your change in the diff.
 | `seed/seed.json`         | Schema definition + demo content (collections, fields, taxonomies, menus, widgets) |
 | `emdash-env.d.ts`        | Generated types for collections (auto-regenerated on dev server start)             |
 | `src/layouts/Base.astro` | Page shell -- top bar, masthead, three-column grid, footer, EmDash wiring          |
-| `src/styles/theme.css`   | Design tokens and shared primitives (panels, bevels, kickers, animations)         |
-| `src/components/`        | Shared markup -- rails, widget renderer, piece card, image frame                  |
+| `src/styles/theme.css`   | Design tokens and shared primitives (panels, bevels, kickers, animations)          |
+| `src/components/`        | Shared markup -- rails, widget renderer, piece card, image frame                   |
 | `src/pages/`             | Astro pages -- all server-rendered                                                 |
 
 ## Skills
@@ -223,10 +179,11 @@ EmDash's own core migrations at deploy time, and explicitly not user content mod
 
 The admin is behind Cloudflare Access rather than passkeys: `astro.config.mjs`
 passes `auth: access({ ... })` to `emdash()`, which bakes the team domain and
-the AUD tag into the worker at build time.
+the AUD tag into the worker at build time. That is unconditional -- there is no
+dev variant of the config.
 
-`pnpm build:local` sets `EMDASH_LOCAL_AUTH=1`, which drops `auth` from the
-config and restores passkeys plus the dev-bypass endpoint.
+Locally, go in through the dev-bypass URL rather than `/_emdash/admin`, which
+sends an anonymous visitor to the real Access login.
 
 Both values are literals in `astro.config.mjs`, and `CF_ACCESS_TEAM_DOMAIN` /
 `CF_ACCESS_AUD` override them from `.env` or the shell -- that is what

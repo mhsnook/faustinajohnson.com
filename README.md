@@ -1,8 +1,8 @@
-# Faustina Johnson
+# Writer portfolio
 
-Faustina Johnson's writer portfolio: long-form pieces, field notes, and images
-from the road. Built with [EmDash](https://github.com/emdash-cms/emdash), a
-full-stack TypeScript CMS on Astro, running on Cloudflare Workers.
+A writer's portfolio: long-form pieces, field notes, and images from the road.
+Built with [EmDash](https://github.com/emdash-cms/emdash), a full-stack
+TypeScript CMS on Astro, running on Cloudflare Workers.
 
 It started from the EmDash `starter-cloudflare` template and now carries its own
 design — dark and letterpress, set in IM Fell English, with the home page laid

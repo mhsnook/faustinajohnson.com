@@ -57,11 +57,7 @@ const categories = post.data.terms?.category ?? [];
 					<time datetime={post.data.published_on}>{formatLongDate(post.data.published_on)}</time>
 				)
 			}
-			{
-				categories.map((category) => (
-					<a href={`/category/${category.slug}`}>{category.label}</a>
-				))
-			}
+			{categories.map((category) => <a href={`/category/${category.slug}`}>{category.label}</a>)}
 		</div>
 
 		<h1 class="piece-page__title" {...post.edit.title}>{post.data.title}</h1>

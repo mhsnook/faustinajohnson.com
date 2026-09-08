@@ -27,8 +27,7 @@ const selfTitled = componentId === "site:field-photos";
 // Now playing runs ember; every other rail heading runs the muted flame.
 const isNowPlaying = componentId === "site:now-playing";
 
-const menu =
-	widget.type === "menu" && widget.menuName ? await getMenu(widget.menuName) : null;
+const menu = widget.type === "menu" && widget.menuName ? await getMenu(widget.menuName) : null;
 ---
 
 <div class="panel panel--sunk">

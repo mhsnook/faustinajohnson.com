@@ -1,32 +1,48 @@
-# Personal portfolio website
+# Writer portfolio
 
-A website built with [EmDash](https://github.com/emdash-cms/emdash), a full-stack TypeScript CMS on Astro, running on Cloudflare Workers. Scaffolded from the EmDash `starter-cloudflare` template: posts, pages, categories and tags with minimal styling, meant as a base to build on.
+A writer's portfolio: long-form pieces, field notes, and images from the road.
+Built with [EmDash](https://github.com/emdash-cms/emdash), a full-stack
+TypeScript CMS on Astro, running on Cloudflare Workers.
+
+It started from the EmDash `starter-cloudflare` template and now carries its own
+design — dark and letterpress, set in IM Fell English, with the home page laid
+out as one scrolling sequence: masthead, bio, the work, the method, field notes,
+and a closing call for correspondence.
 
 ## What's Included
 
-- Posts with category and tag archives
-- Static pages via slug routing
-- Seed data with demo content
-- D1 database and R2 storage pre-configured
-- Dark/light mode support
+- **Pieces** — long-form work, with category and tag archives
+- **Field Notes** — short dated entries, newest first
+- **Images** — one entry per subject, each with a gallery and an optional MIDI file
+- **Method** — three tenets rendered as a grid on the home page
+- **Pages** — standalone pages by slug, which also supply the home page's bio,
+  method heading, and closing block
+- Editable chrome: the marquee and both rails are widget areas
+- D1 database and R2 storage pre-configured, with seed data for a fresh install
 
 ## Pages
 
 | Page | Route |
 |---|---|
 | Homepage | `/` |
-| All posts | `/posts` |
-| Single post | `/posts/:slug` |
+| All pieces | `/posts` |
+| Single piece | `/posts/:slug` |
+| Field notes | `/notes` |
+| Single note | `/notes/:slug` |
+| Images | `/images` |
+| Single image | `/images/:slug` |
 | Category archive | `/category/:slug` |
 | Tag archive | `/tag/:slug` |
-| Static pages | `/:slug` |
+| Standalone pages | `/:slug` |
 | 404 | fallback |
+
+Every route is server-rendered.
 
 ## Infrastructure
 
 - **Runtime:** Cloudflare Workers
 - **Database:** D1
-- **Storage:** R2
+- **Storage:** R2, with Cloudflare Images for transforms
 - **Framework:** Astro with `@astrojs/cloudflare`
 
 ## Local Development
@@ -40,15 +56,14 @@ The site runs at http://localhost:4321 and the admin UI at
 http://localhost:4321/_emdash/admin. On first run EmDash creates the local
 database and loads `seed/seed.json`.
 
-Other scripts: `pnpm build`, `pnpm build:local`, `pnpm preview`, `pnpm typecheck`.
+Other scripts: `pnpm build`, `pnpm preview`, `pnpm typecheck`.
 
 ## Admin access
 
 The deployed admin sits behind Cloudflare Access, so signing in at the edge is
 the only sign-in. It needs `CF_ACCESS_TEAM_DOMAIN` and `CF_ACCESS_AUD` in
 `.env` (see `.env.example`) and one Access application over the site. Locally,
-`pnpm build:local` swaps back to passkeys so the admin is reachable without an
-Access JWT.
+EmDash falls back to passkeys in dev, so the dev-bypass URL signs you in.
 
 Setting up that application, the identity and role model, and how to add people
 are in [docs/auth.md](docs/auth.md).

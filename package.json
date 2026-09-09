@@ -9,6 +9,7 @@
 		"preview": "astro preview",
 		"deploy": "astro build && wrangler deploy",
 		"typecheck": "astro check",
+		"schema:dump": "node scripts/dump-schema.mjs",
 		"schema:push": "node scripts/push-schema.mjs",
 		"content:push": "node scripts/push-content.mjs",
 		"lint": "oxlint",

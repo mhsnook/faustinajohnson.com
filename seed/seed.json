@@ -482,24 +482,13 @@
 				}
 			},
 			{
-				"id": "nav-aria-label",
-				"slug": "nav-aria-label",
-				"status": "published",
-				"data": {
-					"title": "Navigation — screen-reader name for the nav",
-					"group": "chrome",
-					"sort_order": 3,
-					"body": "Sections"
-				}
-			},
-			{
 				"id": "field-photos-all-link",
 				"slug": "field-photos-all-link",
 				"status": "published",
 				"data": {
 					"title": "Right rail — link at the head of From the field",
 					"group": "chrome",
-					"sort_order": 4,
+					"sort_order": 3,
 					"body": "all →"
 				}
 			},

@@ -460,6 +460,270 @@
 	"content": {
 		"snippets": [
 			{
+				"id": "masthead-kicker-default",
+				"slug": "masthead-kicker-default",
+				"status": "published",
+				"data": {
+					"title": "Masthead — kicker, when a page sets none",
+					"group": "chrome",
+					"sort_order": 1,
+					"body": "long form · field research · cultural context"
+				}
+			},
+			{
+				"id": "nav-label",
+				"slug": "nav-label",
+				"status": "published",
+				"data": {
+					"title": "Navigation — heading above the links",
+					"group": "chrome",
+					"sort_order": 2,
+					"body": "the rooms"
+				}
+			},
+			{
+				"id": "nav-aria-label",
+				"slug": "nav-aria-label",
+				"status": "published",
+				"data": {
+					"title": "Navigation — screen-reader name for the nav",
+					"group": "chrome",
+					"sort_order": 3,
+					"body": "Sections"
+				}
+			},
+			{
+				"id": "field-photos-all-link",
+				"slug": "field-photos-all-link",
+				"status": "published",
+				"data": {
+					"title": "Right rail — link at the head of From the field",
+					"group": "chrome",
+					"sort_order": 4,
+					"body": "all →"
+				}
+			},
+			{
+				"id": "posts-page-title",
+				"slug": "posts-page-title",
+				"status": "published",
+				"data": {
+					"title": "The Work — page and masthead title",
+					"group": "posts",
+					"sort_order": 1,
+					"body": "The Work"
+				}
+			},
+			{
+				"id": "posts-page-kicker",
+				"slug": "posts-page-kicker",
+				"status": "published",
+				"data": {
+					"title": "The Work — masthead kicker",
+					"group": "posts",
+					"sort_order": 2,
+					"body": "everything, in order"
+				}
+			},
+			{
+				"id": "posts-section-heading",
+				"slug": "posts-section-heading",
+				"status": "published",
+				"data": {
+					"title": "The Work — heading above the list",
+					"group": "posts",
+					"sort_order": 3,
+					"body": "All Pieces"
+				}
+			},
+			{
+				"id": "search-placeholder",
+				"slug": "search-placeholder",
+				"status": "published",
+				"data": {
+					"title": "The Work — placeholder in the search box",
+					"group": "posts",
+					"sort_order": 4,
+					"body": "Search the archive…"
+				}
+			},
+			{
+				"id": "post-kicker-fallback",
+				"slug": "post-kicker-fallback",
+				"status": "published",
+				"data": {
+					"title": "Piece — masthead kicker when the piece has none",
+					"group": "posts",
+					"sort_order": 5,
+					"body": "a piece"
+				}
+			},
+			{
+				"id": "notes-page-title",
+				"slug": "notes-page-title",
+				"status": "published",
+				"data": {
+					"title": "Field Notes — page title, masthead, and the home page heading",
+					"group": "notes",
+					"sort_order": 1,
+					"body": "Field Notes"
+				}
+			},
+			{
+				"id": "notes-page-kicker",
+				"slug": "notes-page-kicker",
+				"status": "published",
+				"data": {
+					"title": "Field Notes — masthead kicker and the home page meta",
+					"group": "notes",
+					"sort_order": 2,
+					"body": "updated weekly"
+				}
+			},
+			{
+				"id": "notes-section-heading",
+				"slug": "notes-section-heading",
+				"status": "published",
+				"data": {
+					"title": "Field Notes — heading above the list",
+					"group": "notes",
+					"sort_order": 3,
+					"body": "Every Note"
+				}
+			},
+			{
+				"id": "images-page-title",
+				"slug": "images-page-title",
+				"status": "published",
+				"data": {
+					"title": "Images — page and masthead title",
+					"group": "images",
+					"sort_order": 1,
+					"body": "Images"
+				}
+			},
+			{
+				"id": "images-page-kicker",
+				"slug": "images-page-kicker",
+				"status": "published",
+				"data": {
+					"title": "Images — masthead kicker",
+					"group": "images",
+					"sort_order": 2,
+					"body": "the wall"
+				}
+			},
+			{
+				"id": "images-section-heading",
+				"slug": "images-section-heading",
+				"status": "published",
+				"data": {
+					"title": "Images — heading above the wall",
+					"group": "images",
+					"sort_order": 3,
+					"body": "Every Image"
+				}
+			},
+			{
+				"id": "image-kicker-fallback",
+				"slug": "image-kicker-fallback",
+				"status": "published",
+				"data": {
+					"title": "Image — masthead kicker when it has no date or place",
+					"group": "images",
+					"sort_order": 4,
+					"body": "an image"
+				}
+			},
+			{
+				"id": "page-kicker-fallback",
+				"slug": "page-kicker-fallback",
+				"status": "published",
+				"data": {
+					"title": "Standalone page — masthead kicker when the page has none",
+					"group": "pages",
+					"sort_order": 1,
+					"body": "a page"
+				}
+			},
+			{
+				"id": "404-page-title",
+				"slug": "404-page-title",
+				"status": "published",
+				"data": {
+					"title": "404 — browser tab title",
+					"group": "404",
+					"sort_order": 1,
+					"body": "Not Found"
+				}
+			},
+			{
+				"id": "404-hero-title",
+				"slug": "404-hero-title",
+				"status": "published",
+				"data": {
+					"title": "404 — masthead title",
+					"group": "404",
+					"sort_order": 2,
+					"body": "404"
+				}
+			},
+			{
+				"id": "404-kicker",
+				"slug": "404-kicker",
+				"status": "published",
+				"data": {
+					"title": "404 — masthead kicker",
+					"group": "404",
+					"sort_order": 3,
+					"body": "the room is empty"
+				}
+			},
+			{
+				"id": "404-heading",
+				"slug": "404-heading",
+				"status": "published",
+				"data": {
+					"title": "404 — heading",
+					"group": "404",
+					"sort_order": 4,
+					"body": "Nothing at this address"
+				}
+			},
+			{
+				"id": "404-body",
+				"slug": "404-body",
+				"status": "published",
+				"data": {
+					"title": "404 — paragraph",
+					"group": "404",
+					"sort_order": 5,
+					"body": "The page moved, or it was never here. The work is all still on the shelf."
+				}
+			},
+			{
+				"id": "404-home-link",
+				"slug": "404-home-link",
+				"status": "published",
+				"data": {
+					"title": "404 — first button",
+					"group": "404",
+					"sort_order": 6,
+					"body": "back to the front"
+				}
+			},
+			{
+				"id": "404-work-link",
+				"slug": "404-work-link",
+				"status": "published",
+				"data": {
+					"title": "404 — second button",
+					"group": "404",
+					"sort_order": 7,
+					"body": "the work"
+				}
+			},
+			{
 				"id": "topbar-greeting",
 				"slug": "topbar-greeting",
 				"status": "published",

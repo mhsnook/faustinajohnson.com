@@ -1,6 +1,7 @@
 ---
 import { getEmDashCollection } from "emdash";
 import Frame from "../Frame.astro";
+import { getSnippets } from "../../utils/snippets";
 
 interface Props {
 	title?: string;
@@ -20,11 +21,13 @@ if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
 const lead = entries[0] ?? null;
 const thumbs = entries.slice(1, 4);
 const thumbSlots = Array.from({ length: 3 }, (_, i) => thumbs[i] ?? null);
+
+const { snippet } = await getSnippets();
 ---
 
 <div class="ff__head">
 	<span class="kicker kicker--flame">{title}</span>
-	<a class="ff__all" href={href}>all →</a>
+	<a class="ff__all" href={href}>{snippet("field-photos-all-link")}</a>
 </div>
 
 {

@@ -37,7 +37,7 @@ const dateline = formatNoteDate(note.data.note_date);
 	description={seo.description}
 	canonical={seo.canonical}
 	content={{ collection: "notes", id: note.data.id, slug }}
-	heroTitle="Field Notes"
+	heroTitle={snippet("notes-page-title")}
 	heroKicker={dateline}
 >
 	<article class="panel">

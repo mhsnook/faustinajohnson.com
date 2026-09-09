@@ -46,7 +46,7 @@ const meta = [dateline, image.data.location].filter(Boolean).join(" · ");
 	image={seo.ogImage}
 	content={{ collection: "images", id: image.data.id, slug }}
 	heroTitle={image.data.title}
-	heroKicker={meta || "an image"}
+	heroKicker={meta || snippet("image-kicker-fallback")}
 >
 	<article class="panel">
 		<div {...image.edit.image}>

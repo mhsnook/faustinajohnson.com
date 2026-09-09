@@ -1,18 +1,23 @@
 ---
 import Base from "../layouts/Base.astro";
+import { getSnippets } from "../utils/snippets";
+
+const { snippet } = await getSnippets();
 ---
 
-<Base title="Not Found" heroTitle="404" heroKicker="the room is empty">
+<Base
+	title={snippet("404-page-title")}
+	heroTitle={snippet("404-hero-title")}
+	heroKicker={snippet("404-kicker")}
+>
 	<section class="panel panel--hearth">
 		<div class="glow glow--hearth" aria-hidden="true"></div>
 		<div class="hearth__inner">
-			<h1 class="hearth__title">Nothing at this address</h1>
-			<p class="hearth__body">
-				The page moved, or it was never here. The work is all still on the shelf.
-			</p>
+			<h1 class="hearth__title">{snippet("404-heading")}</h1>
+			<p class="hearth__body">{snippet("404-body")}</p>
 			<div class="hearth__actions">
-				<a class="btn btn--ember" href="/">back to the front</a>
-				<a class="btn" href="/posts">the work</a>
+				<a class="btn btn--ember" href="/">{snippet("404-home-link")}</a>
+				<a class="btn" href="/posts">{snippet("404-work-link")}</a>
 			</div>
 		</div>
 	</section>

@@ -59,7 +59,7 @@ const fullTitle = title.includes(siteTitle) ? title : `${title} — ${siteTitle}
 const pageDescription = description ?? siteTagline;
 
 const mastheadTitle = heroTitle ?? title;
-const mastheadKicker = heroKicker ?? "long form · field research · cultural context";
+const mastheadKicker = heroKicker ?? snippet("masthead-kicker-default");
 
 const pageCtx = createPublicPageContext({
 	Astro,
@@ -121,8 +121,8 @@ const pageCtx = createPublicPageContext({
 
 		<div class="shell">
 			<aside class="shell__left">
-				<nav class="rooms" aria-label="Sections">
-					<div class="kicker kicker--muted rooms__label">the rooms</div>
+				<nav class="rooms" aria-label={snippet("nav-aria-label")}>
+					<div class="kicker kicker--muted rooms__label">{snippet("nav-label")}</div>
 					{
 						menu?.items.map((item) => (
 							<a class="chip" href={item.url} target={item.target}>

@@ -1,4 +1,6 @@
 ---
+import { getSnippets } from "../utils/snippets";
+
 interface Props {
 	src: string;
 	filename?: string | null;
@@ -6,13 +8,17 @@ interface Props {
 
 const { src, filename } = Astro.props;
 
+const { snippet } = await getSnippets();
+
 const SOUND_FONT = "https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus";
 ---
 
 <div class="panel panel--sunk midi">
-	<div class="kicker kicker--flame midi__label">♫ the recording</div>
+	<div class="kicker kicker--flame midi__label">{snippet("midi-label")}</div>
 	<midi-player src={src} sound-font={SOUND_FONT} class="midi__player">
-		<a class="midi__fallback" href={src} download={filename ?? undefined}> download the midi </a>
+		<a class="midi__fallback" href={src} download={filename ?? undefined}>
+			{snippet("midi-download")}
+		</a>
 	</midi-player>
 </div>
 

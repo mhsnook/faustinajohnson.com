@@ -4,6 +4,7 @@ import { PortableText } from "emdash/ui";
 import Base from "../../layouts/Base.astro";
 import { formatNoteDate } from "../../utils/dates";
 import { resolveStarterSiteIdentity } from "../../utils/site-identity";
+import { getSnippets } from "../../utils/snippets";
 
 const slug = decodeSlug(Astro.params.slug);
 
@@ -19,6 +20,7 @@ if (!note) {
 
 if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
 const { siteTitle } = resolveStarterSiteIdentity(await getSiteSettings());
+const { snippet } = await getSnippets();
 
 const seo = getSeoMeta(note, {
 	siteTitle,
@@ -44,7 +46,7 @@ const dateline = formatNoteDate(note.data.note_date);
 		<div class="prose">
 			<PortableText value={note.data.content} />
 		</div>
-		<a class="note-page__back" href="/notes">← all field notes</a>
+		<a class="note-page__back" href="/notes">{snippet("notes-back-link")}</a>
 	</article>
 </Base>
 

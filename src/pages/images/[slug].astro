@@ -5,6 +5,7 @@ import MidiPlayer from "../../components/MidiPlayer.astro";
 import Base from "../../layouts/Base.astro";
 import { formatLongDate } from "../../utils/dates";
 import { resolveStarterSiteIdentity } from "../../utils/site-identity";
+import { getSnippets } from "../../utils/snippets";
 
 const slug = decodeSlug(Astro.params.slug);
 
@@ -20,6 +21,7 @@ if (!image) {
 
 if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
 const { siteTitle } = resolveStarterSiteIdentity(await getSiteSettings());
+const { snippet } = await getSnippets();
 
 const seo = getSeoMeta(image, {
 	siteTitle,
@@ -77,7 +79,7 @@ const meta = [dateline, image.data.location].filter(Boolean).join(" · ");
 			)
 		}
 
-		<a class="image-page__back" href="/images">← all images</a>
+		<a class="image-page__back" href="/images">{snippet("images-back-link")}</a>
 	</article>
 </Base>
 

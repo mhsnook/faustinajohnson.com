@@ -460,11 +460,88 @@
 	"content": {
 		"snippets": [
 			{
+				"id": "topbar-greeting",
+				"slug": "topbar-greeting",
+				"status": "published",
+				"data": {
+					"title": "Top bar — greeting, left of the ticker",
+					"group": "topbar",
+					"sort_order": 1,
+					"body": "✦ enter quietly"
+				}
+			},
+			{
+				"id": "topbar-contact",
+				"slug": "topbar-contact",
+				"status": "published",
+				"data": {
+					"title": "Top bar — contact link, right of the ticker",
+					"group": "topbar",
+					"sort_order": 2,
+					"body": "write to me →"
+				}
+			},
+			{
+				"id": "piece-card-cta",
+				"slug": "piece-card-cta",
+				"status": "published",
+				"data": {
+					"title": "Piece card — the line under the excerpt",
+					"group": "pieces",
+					"sort_order": 1,
+					"body": "read the piece →"
+				}
+			},
+			{
+				"id": "midi-label",
+				"slug": "midi-label",
+				"status": "published",
+				"data": {
+					"title": "Image page — label above the MIDI player",
+					"group": "midi",
+					"sort_order": 1,
+					"body": "♫ the recording"
+				}
+			},
+			{
+				"id": "midi-download",
+				"slug": "midi-download",
+				"status": "published",
+				"data": {
+					"title": "Image page — download link inside the MIDI player",
+					"group": "midi",
+					"sort_order": 2,
+					"body": "download the midi"
+				}
+			},
+			{
+				"id": "notes-back-link",
+				"slug": "notes-back-link",
+				"status": "published",
+				"data": {
+					"title": "Field note — link back to every note",
+					"group": "notes",
+					"sort_order": 1,
+					"body": "← all field notes"
+				}
+			},
+			{
+				"id": "images-back-link",
+				"slug": "images-back-link",
+				"status": "published",
+				"data": {
+					"title": "Image page — link back to every image",
+					"group": "images",
+					"sort_order": 1,
+					"body": "← all images"
+				}
+			},
+			{
 				"id": "footer-tagline",
 				"slug": "footer-tagline",
 				"status": "published",
 				"data": {
-					"title": "Footer tagline",
+					"title": "Footer — tagline line",
 					"group": "footer",
 					"sort_order": 1,
 					"body": "faustina johnson · the valley · all pieces their own"
@@ -475,7 +552,7 @@
 				"slug": "footer-signoff",
 				"status": "published",
 				"data": {
-					"title": "Footer signoff",
+					"title": "Footer — signoff line",
 					"group": "footer",
 					"sort_order": 2,
 					"body": "thank you for reading slowly"

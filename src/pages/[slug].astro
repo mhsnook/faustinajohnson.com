@@ -4,6 +4,7 @@ import { PortableText } from "emdash/ui";
 import Frame from "../components/Frame.astro";
 import Base from "../layouts/Base.astro";
 import { AUTHOR_PORTRAIT, resolveStarterSiteIdentity } from "../utils/site-identity";
+import { getSnippets } from "../utils/snippets";
 
 const slug = decodeSlug(Astro.params.slug);
 
@@ -27,6 +28,8 @@ const seo = getSeoMeta(page, {
 });
 
 const portrait = page.data.portrait ?? (slug === "about" ? AUTHOR_PORTRAIT : null);
+
+const { snippet } = await getSnippets();
 ---
 
 <Base
@@ -36,7 +39,7 @@ const portrait = page.data.portrait ?? (slug === "about" ? AUTHOR_PORTRAIT : nul
 	canonical={seo.canonical}
 	content={{ collection: "pages", id: page.data.id, slug }}
 	heroTitle={page.data.title}
-	heroKicker={page.data.kicker ?? "a page"}
+	heroKicker={page.data.kicker ?? snippet("page-kicker-fallback")}
 >
 	<article class="panel">
 		<div class:list={[portrait && "portrait-grid"]}>

@@ -6,6 +6,7 @@ import { EmDashBodyEnd, EmDashBodyStart, EmDashHead } from "emdash/ui";
 import Marquee from "../components/Marquee.astro";
 import Rail from "../components/Rail.astro";
 import { resolveStarterSiteIdentity } from "../utils/site-identity";
+import { getSnippets } from "../utils/snippets";
 import "../styles/theme.css";
 
 interface Props {
@@ -39,20 +40,26 @@ const {
 // One batch instead of a chain. The three widget areas are warmed here on
 // purpose: getWidgetArea is request-cached, and the right rail renders after
 // <slot />, so without this its query cannot start until the main column is done.
-const [settings, menu] = await Promise.all([
+const [settings, menu, { snippet, cacheHint: snippetsHint }] = await Promise.all([
 	getSiteSettings(),
 	getMenu("primary"),
+	getSnippets(),
 	getWidgetArea("marquee"),
 	getWidgetArea("rail-left"),
 	getWidgetArea("rail"),
 ]);
 
 const { siteTitle, siteTagline, siteLogo } = resolveStarterSiteIdentity(settings);
+
+if (Astro.cache?.enabled) {
+	Astro.cache.set(snippetsHint);
+}
+
 const fullTitle = title.includes(siteTitle) ? title : `${title} — ${siteTitle}`;
 const pageDescription = description ?? siteTagline;
 
 const mastheadTitle = heroTitle ?? title;
-const mastheadKicker = heroKicker ?? "long form · field research · cultural context";
+const mastheadKicker = heroKicker ?? snippet("masthead-kicker-default");
 
 const pageCtx = createPublicPageContext({
 	Astro,
@@ -84,9 +91,9 @@ const pageCtx = createPublicPageContext({
 		<EmDashBodyStart page={pageCtx} />
 
 		<div class="topbar">
-			<span class="topbar__mark">✦ enter quietly</span>
+			<span class="topbar__mark">{snippet("topbar-greeting")}</span>
 			<Marquee />
-			<a class="topbar__link" href="/#correspondence">write to me →</a>
+			<a class="topbar__link" href="/#correspondence">{snippet("topbar-contact")}</a>
 		</div>
 
 		<header class:list={["masthead", hero === "compact" && "masthead--compact"]}>
@@ -115,7 +122,7 @@ const pageCtx = createPublicPageContext({
 		<div class="shell">
 			<aside class="shell__left">
 				<nav class="rooms" aria-label="Sections">
-					<div class="kicker kicker--muted rooms__label">the rooms</div>
+					<div class="kicker kicker--muted rooms__label">{snippet("nav-label")}</div>
 					{
 						menu?.items.map((item) => (
 							<a class="chip" href={item.url} target={item.target}>
@@ -137,8 +144,8 @@ const pageCtx = createPublicPageContext({
 		</div>
 
 		<footer class="footer">
-			<div class="footer__line">faustina johnson · the valley · all pieces their own</div>
-			<div class="footer__sign">thank you for reading slowly</div>
+			<div class="footer__line">{snippet("footer-tagline")}</div>
+			<div class="footer__sign">{snippet("footer-signoff")}</div>
 		</footer>
 
 		<EmDashBodyEnd page={pageCtx} />

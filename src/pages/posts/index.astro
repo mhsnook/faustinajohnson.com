@@ -4,21 +4,28 @@ import LiveSearch from "emdash/ui/search";
 import PieceCard from "../../components/PieceCard.astro";
 import SectionHead from "../../components/SectionHead.astro";
 import Base from "../../layouts/Base.astro";
+import { getSnippets } from "../../utils/snippets";
 
 const { entries: posts, cacheHint } = await getEmDashCollection("posts", {
 	status: "published",
 	orderBy: { published_on: "desc" },
 });
 if (Astro.cache?.enabled) Astro.cache.set(cacheHint);
+
+const { snippet } = await getSnippets();
 ---
 
-<Base title="The Work" heroTitle="The Work" heroKicker="everything, in order">
+<Base
+	title={snippet("posts-page-title")}
+	heroTitle={snippet("posts-page-title")}
+	heroKicker={snippet("posts-page-kicker")}
+>
 	<section>
-		<SectionHead title="All Pieces" meta={`${posts.length} in total`} />
+		<SectionHead title={snippet("posts-section-heading")} meta={`${posts.length} in total`} />
 
 		<div class="search">
 			<LiveSearch
-				placeholder="Search the archive…"
+				placeholder={snippet("search-placeholder")}
 				collections={["posts", "notes", "pages", "images"]}
 			/>
 		</div>

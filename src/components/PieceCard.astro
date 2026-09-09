@@ -1,6 +1,7 @@
 ---
 import type { MediaValue } from "emdash";
 import Frame from "./Frame.astro";
+import { getSnippets } from "../utils/snippets";
 
 interface Props {
 	href: string;
@@ -13,6 +14,8 @@ interface Props {
 }
 
 const { href, title, kicker, excerpt, image, flip = false } = Astro.props;
+
+const { snippet } = await getSnippets();
 ---
 
 <a class:list={["piece", flip && "piece--flip"]} href={href}>
@@ -23,7 +26,7 @@ const { href, title, kicker, excerpt, image, flip = false } = Astro.props;
 		{kicker && <div class="kicker piece__kicker">{kicker}</div>}
 		<h3 class="piece__title">{title}</h3>
 		{excerpt && <p class="piece__excerpt">{excerpt}</p>}
-		<span class="piece__cta">read the piece →</span>
+		<span class="piece__cta">{snippet("piece-card-cta")}</span>
 	</div>
 </a>
 

@@ -69,6 +69,21 @@ export interface Post {
   terms?: Record<string, TaxonomyTerm[]>;
 }
 
+export interface Snippet {
+  id: string;
+  slug: string | null;
+  status: string;
+  title: string;
+  body?: string;
+  group?: string;
+  sort_order?: number;
+  createdAt: Date;
+  updatedAt: Date;
+  publishedAt: Date | null;
+  bylines?: ContentBylineCredit[];
+  terms?: Record<string, TaxonomyTerm[]>;
+}
+
 export interface Tenet {
   id: string;
   slug: string | null;
@@ -90,6 +105,7 @@ declare module "emdash" {
     notes: Note;
     pages: Page;
     posts: Post;
+    snippets: Snippet;
     tenets: Tenet;
   }
 }

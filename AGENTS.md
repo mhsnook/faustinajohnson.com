@@ -155,8 +155,15 @@ site's schema over the REST API, and creates what is missing.
 ```bash
 pnpm schema:push --url https://faustinajohnson.com --dry-run   # show the plan
 pnpm schema:push --url https://faustinajohnson.com             # apply it
+pnpm content:push --url https://faustinajohnson.com            # create the seed's entries
 npx emdash types --url https://faustinajohnson.com             # refresh the types
 ```
+
+`schema:push` creates collections and fields, never entries, so a collection it adds
+to a live site arrives empty. `content:push` fills it: it creates any seed entry whose
+slug is missing and publishes the ones the seed marks published. Both only ever add --
+an entry already there keeps whatever it has been reworded to, and a row the seed no
+longer carries is left in place.
 
 It only ever adds. A collection or field the live site has and the seed does not is
 left alone; a field whose type has drifted is reported, not corrected. A collection
@@ -274,6 +281,9 @@ call to action. Every other route reuses the same shell.
 - `pages`: `title`, `kicker`, `portrait` (image), `content`.
   `/about` supplies the home page bio; `/method` supplies the Method heading and pull quote;
   `/correspondence` supplies the closing block.
+- `snippets`: `title`, `body`, `group`, `sort_order`. One short piece of copy per entry,
+  read by slug. `footer-tagline` and `footer-signoff` are the two lines at the foot of
+  every page. `group` and `sort_order` are indexed, for chrome that renders a list.
 - Taxonomies: `category` (hierarchical), `tag`.
 - Menus: `primary` ("the rooms" nav) and `correspondence` (the two closing buttons).
 

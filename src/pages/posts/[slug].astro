@@ -5,6 +5,7 @@ import { formatLongDate } from "../../utils/dates";
 import Frame from "../../components/Frame.astro";
 import Base from "../../layouts/Base.astro";
 import { resolveStarterSiteIdentity } from "../../utils/site-identity";
+import { getSnippets } from "../../utils/snippets";
 
 const slug = decodeSlug(Astro.params.slug);
 
@@ -30,6 +31,8 @@ const seo = getSeoMeta(post, {
 // Taxonomy terms are already hydrated onto the entry by getEmDashEntry.
 const tags = post.data.terms?.tag ?? [];
 const categories = post.data.terms?.category ?? [];
+
+const { snippet } = await getSnippets();
 ---
 
 <Base
@@ -40,7 +43,7 @@ const categories = post.data.terms?.category ?? [];
 	image={seo.ogImage}
 	content={{ collection: "posts", id: post.data.id, slug }}
 	heroTitle={post.data.title}
-	heroKicker={post.data.kicker ?? "a piece"}
+	heroKicker={post.data.kicker ?? snippet("post-kicker-fallback")}
 >
 	<article class="panel">
 		{

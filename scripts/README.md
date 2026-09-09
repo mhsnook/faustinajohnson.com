@@ -8,11 +8,38 @@ written from the repository root.
 
 | Script                     | Run with            | What it does                                                                |
 | -------------------------- | ------------------- | --------------------------------------------------------------------------- |
+| `scripts/dump-schema.mjs`  | `pnpm schema:dump`  | Rewrites the seed's collections from a running site                         |
 | `scripts/push-schema.mjs`  | `pnpm schema:push`  | Creates the collections and fields the site is missing                      |
 | `scripts/push-content.mjs` | `pnpm content:push` | Creates the seed entries whose slug is missing, publishing as the seed says |
 
-Both take `--url`, `--dry-run` to print the plan without sending it, and
-`--collection` to narrow the run.
+All three take `--url`, `--dry-run` to print the plan without acting on it, and
+`--collection` to narrow the run. `schema:dump` also takes `--check`, which writes
+nothing and exits non-zero when the site and the seed disagree.
+
+## Changing the shape
+
+Schema changes start in a dev admin and arrive in production as a commit:
+
+```bash
+pnpm dev                                                   # shape the collection in the admin
+pnpm schema:dump --url http://127.0.0.1:4321               # write it into seed/seed.json
+git add seed/seed.json && git commit                       # the change is now the committed truth
+pnpm schema:push --url https://faustinajohnson.com --dry-run
+pnpm schema:push --url https://faustinajohnson.com
+```
+
+The dump only rewrites `collections`. Settings, taxonomies, menus, widget areas
+and content stay as committed — they hold copy someone may have reworded on the
+live site, and a database is the wrong place to take that from.
+
+Two things to expect. The first dump re-wraps the collections block, because the
+seed was hand-written and the dump prints it; the change is formatting only, and
+later dumps touch just what changed. And the seed's field order follows the live
+`sortOrder`, so reordering fields in the admin shows up as a reordered seed.
+
+`npx emdash export-seed --database <local d1 sqlite>` writes a whole seed, content
+included, but only from a local SQLite file, and it drops `titleField` and
+`dateField`.
 
 ## In dev
 
@@ -25,7 +52,8 @@ pnpm dev
 curl -L "http://127.0.0.1:4321/_emdash/api/setup/dev-bypass?redirect=/"
 ```
 
-To rehearse a push against that running site instead, borrow its session cookie:
+`--dev-bypass` on the push scripts calls an endpoint emdash 0.36.0 does not serve,
+so to reach a running dev site, borrow its session cookie:
 
 ```bash
 COOKIE=$(curl -si "http://127.0.0.1:4321/_emdash/api/setup/dev-bypass?redirect=/" \

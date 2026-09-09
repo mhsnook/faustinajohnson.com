@@ -10,6 +10,7 @@
 		"deploy": "astro build && wrangler deploy",
 		"typecheck": "astro check",
 		"schema:push": "node scripts/push-schema.mjs",
+		"content:push": "node scripts/push-content.mjs",
 		"lint": "oxlint",
 		"lint:fix": "oxlint --fix",
 		"format": "lint-staged --diff=HEAD",

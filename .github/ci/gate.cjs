@@ -17,7 +17,7 @@ const path = require('path')
 //   { maxNew: N }      allows up to N new issues
 //   { maxTotal: N }    fails on the absolute count, ignoring the delta
 //
-// typecheck, lint and tests are 'no-new' because all three start at zero on
+// build, typecheck, lint and tests are 'no-new' because all four start clean on
 // this repo — nothing has to be cleaned up before the gate is usable.
 //
 // format is 'touched-clean' rather than 'no-new' because formatting is not
@@ -25,6 +25,7 @@ const path = require('path')
 // .astro files pre-date the formatter and are deliberately left alone; they
 // clear as they are edited.
 const POLICY = {
+	build: 'no-new',
 	typecheck: 'no-new',
 	lint: 'no-new',
 	format: 'touched-clean',
@@ -39,6 +40,35 @@ const POLICY = {
 	},
 }
 
+// Checks whose sidecar must exist. `data.missing` catches a check that reported
+// "I could not measure this"; this list catches one that reported nothing at
+// all, because the job died before writing a fragment. Without it, a head job
+// that crashed before the tests ran passes the gate in silence.
+//
+// `build` is deliberately absent: render-build.cjs writes no sidecar when
+// NEITHER tree recorded an outcome, and that case is already caught by the
+// other four.
+const REQUIRED = ['typecheck', 'lint', 'format', 'tests', 'bundle']
+
+/**
+ * Read a budget written as bytes, `250KiB`, or `5%` of the base size.
+ *
+ * Percentages are convenient on a large number like the Worker and misleading
+ * on a small one, where 5% is a few hundred bytes of ordinary build noise.
+ * Prefer bytes unless the axis is big.
+ */
+function budget(limit, baseBytes) {
+	if (typeof limit === 'number') return limit
+	if (typeof limit !== 'string') return Infinity
+	const pct = limit.match(/^([\d.]+)\s*%$/)
+	if (pct) return (Number(pct[1]) / 100) * (baseBytes ?? 0)
+	const size = limit.match(/^([\d.]+)\s*(B|KB|KiB|MB|MiB)?$/i)
+	if (!size) return Infinity
+	const unit = (size[2] ?? 'B').toLowerCase()
+	const scale = { b: 1, kb: 1000, kib: 1024, mb: 1e6, mib: 1024 * 1024 }[unit] ?? 1
+	return Number(size[1]) * scale
+}
+
 function bundleVerdict(rule, data) {
 	// The hard one first: over this, `wrangler deploy` fails outright, so it
 	// blocks regardless of how much the PR itself added.
@@ -48,12 +78,14 @@ function bundleVerdict(rule, data) {
 			`Cloudflare's ${(data.workerGzLimit / 1048576).toFixed(0)} MB limit — this deploy would be rejected`
 		)
 	}
+	// `budget()` reads each ceiling, so a limit can be written as bytes, as
+	// '250KiB', or as '5%' of that axis on the base branch.
 	const checks = [
-		['worker', data.workerGzDelta, rule.maxWorkerGzDelta],
-		['client JS', data.clientGzDelta, rule.maxClientGzDelta],
+		['worker', data.workerGzDelta, budget(rule.maxWorkerGzDelta, data.workerGzBase)],
+		['client JS', data.clientGzDelta, budget(rule.maxClientGzDelta, data.clientGzBase)],
 	]
 	for (const [label, grew, limit] of checks) {
-		if (typeof limit !== 'number' || typeof grew !== 'number') continue
+		if (!Number.isFinite(limit) || typeof grew !== 'number') continue
 		if (grew > limit) {
 			return (
 				`${label} grew ${(grew / 1024).toFixed(2)} kB gzipped, over the ` +
@@ -82,6 +114,15 @@ function verdict(check, data) {
 		return data.touched > 0 ?
 				`${data.touched} touched file(s) still have issues — run \`pnpm format\` on the files you edited`
 			:	null
+	}
+
+	// Whose fault the failure is belongs in the comment, not here: a broken base
+	// branch still means this PR cannot be verified, so it still blocks.
+	if (check === 'build') {
+		if (data.headOk) return null
+		return data.baseOk ?
+				'this PR breaks the build'
+			:	'neither this PR nor the base branch builds — repair the base branch first'
 	}
 
 	if (check === 'tests') {
@@ -120,13 +161,19 @@ function main(dir) {
 		.sort()
 
 	const failures = []
+	const seen = new Set()
 	for (const f of sidecars) {
 		const data = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'))
+		seen.add(data.check)
 		const reason = verdict(data.check, data)
 		if (reason) failures.push(`${data.check}: ${reason}`)
 		else if ((POLICY[data.check] ?? 'report-only') === 'report-only')
 			console.log(`➖ ${data.check} (report only, not gated)`)
 		else console.log(`✅ ${data.check}`)
+	}
+
+	for (const check of REQUIRED) {
+		if (!seen.has(check)) failures.push(`${check}: no report was produced at all`)
 	}
 
 	if (!failures.length) {
@@ -141,4 +188,4 @@ function main(dir) {
 
 if (require.main === module) main(process.argv[2] ?? '/tmp/fragments')
 
-module.exports = { POLICY, verdict, bundleVerdict }
+module.exports = { POLICY, REQUIRED, budget, verdict, bundleVerdict }

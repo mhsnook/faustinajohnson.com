@@ -13,6 +13,17 @@ const load = (p) => (fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, 'utf8')) :
 
 const formatMB = (n) => (n / 1048576).toFixed(2) + ' MB'
 
+// Two builds of the same commit differ by a few bytes per chunk. Below this,
+// call the gated delta unchanged rather than teaching people that the number is
+// noise — and tripping a byte budget on it.
+const NOISE_FLOOR = 512
+
+// A build that exits zero having written nothing measures as a bundle of zero
+// bytes, which against a real base reports a triumphant −100%. Treat it as the
+// failure it is. `fileCount` is the honest signal; the worker byte count is the
+// fallback for a summary written before that field existed.
+const empty = (m) => !m || !(m.fileCount ?? m.worker?.raw)
+
 /**
  * The Worker is the one axis with a hard external limit. Cloudflare rejects a
  * deploy over 10 MB gzipped on Workers Paid, so this is a budget, not a trend.
@@ -80,11 +91,17 @@ module.exports = function render({ head, base, out }) {
 
 	// A missing measurement means a build failed. Say so rather than rendering a
 	// delta against zeros, which would read as "the whole bundle is new".
-	if (!h || !b) {
-		const which = !h && !b ? 'Both builds' : !h ? 'The PR build' : 'The base build'
+	//
+	// An EMPTY measurement is the same failure wearing a disguise, so it takes
+	// the same branch.
+	if (empty(h) || empty(b)) {
+		const which =
+			empty(h) && empty(b) ? 'Neither build produced a measurable bundle'
+			: empty(h) ? 'The PR build produced no measurable bundle'
+			: 'The base build produced no measurable bundle'
 		fs.writeFileSync(
 			path.join(out, '40-bundle.md'),
-			`#### Bundle size\n\n⚠️ ${which} produced no measurement, so there is nothing to compare. Check the job log.`
+			`#### Bundle size\n\n⚠️ ${which}, so there is nothing to compare. Check the job log.`
 		)
 		fs.writeFileSync(
 			path.join(out, '40-bundle.json'),
@@ -115,6 +132,12 @@ module.exports = function render({ head, base, out }) {
 		chunkSection(b, h),
 	].join('\n')
 
+	// Below the noise floor, report the gated deltas as zero. Two builds of the
+	// same commit differ by a few bytes, and a budget that trips on those teaches
+	// people the number means nothing. The markdown above still shows the real
+	// sizes; only what the gate reads is rounded.
+	const floor = (n) => (Math.abs(n) < NOISE_FLOOR ? 0 : n)
+
 	fs.writeFileSync(path.join(out, '40-bundle.md'), markdown)
 	fs.writeFileSync(
 		path.join(out, '40-bundle.json'),
@@ -123,8 +146,10 @@ module.exports = function render({ head, base, out }) {
 				check: 'bundle',
 				workerGz: h.worker.gz,
 				workerGzLimit: h.worker.limit,
-				workerGzDelta: h.worker.gz - b.worker.gz,
-				clientGzDelta: h.js.gz - b.js.gz,
+				workerGzBase: b.worker.gz,
+				workerGzDelta: floor(h.worker.gz - b.worker.gz),
+				clientGzBase: b.js.gz,
+				clientGzDelta: floor(h.js.gz - b.js.gz),
 				cssGzDelta: h.css.gz - b.css.gz,
 			},
 			null,
@@ -134,3 +159,4 @@ module.exports = function render({ head, base, out }) {
 }
 
 module.exports.chunkSection = chunkSection
+module.exports.NOISE_FLOOR = NOISE_FLOOR

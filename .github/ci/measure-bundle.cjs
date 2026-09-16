@@ -86,8 +86,14 @@ function measure(dist) {
 		}
 	}
 
+	const serverFiles = walk(serverDir)
+
 	return {
-		worker: { ...total(walk(serverDir)), limit: WORKER_GZ_LIMIT },
+		// How many files the build actually emitted. A build that exits zero and
+		// writes almost nothing is a failure wearing a disguise, and the report
+		// step needs a way to tell that apart from a genuinely tiny bundle.
+		fileCount: serverFiles.length + clientFiles.length,
+		worker: { ...total(serverFiles), limit: WORKER_GZ_LIMIT },
 		js: total(js),
 		css: total(css),
 		static: total(staticFiles),

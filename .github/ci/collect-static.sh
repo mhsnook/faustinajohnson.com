@@ -42,6 +42,18 @@ EXCLUDE='^(\.agents/|\.github/ci/|dist/|emdash-env\.d\.ts$|worker-configuration\
 		sed -E 's/^([^:]+):([0-9]+):([0-9]+) - (.*)$/\1:\2:\3: \4/' |
 		grep -Ev "$EXCLUDE" |
 		sort >"$OUT/typecheck.txt"
+	status=${PIPESTATUS[0]}
+
+	# `astro check` can fail without printing a single line the grep above
+	# recognises: a config error, a missing content collection, or a crash in
+	# the language server all exit non-zero with output in another shape. That
+	# leaves an empty typecheck.txt, which reads as zero errors and merges
+	# clean. Record the exit status as one synthetic issue instead, in the same
+	# unix format parsers.unix reads.
+	if [ "$status" -ne 0 ] && [ ! -s "$OUT/typecheck.txt" ]; then
+		echo "typecheck:0:0: error ts(0000): astro check exited $status without recognisable error lines — see the job log" \
+			>"$OUT/typecheck.txt"
+	fi
 ) &
 (
 	# oxlint already emits unix format and repo-root-relative paths, which is

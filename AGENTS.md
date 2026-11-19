@@ -22,17 +22,29 @@ admin without a passkey. It is dev-only, so a production build served by
 
 ### Known dev-mode issues
 
-- **emdash-cms/emdash#2626** (open) -- `getBackend()` parks its in-flight init
-  promise on a `globalThis` singleton and never clears it if the request that
-  started it is cancelled, so every later request in that isolate awaits a promise
-  that will never settle. This is what turned a watcher-triggered reload into a
-  permanent wedge rather than a slow request. `astro.config.mjs` tells vite's
-  watcher to ignore `.wrangler/`, which stops the cancellations that trigger it;
-  the bug itself is still there, so a hang after the first request means
-  something else is cancelling requests mid-init.
-- **emdash-cms/emdash#2572** (open) -- the admin stylesheet 500s under `astro dev`
-  (`vite:oxc` parse error on the `?direct` CSS request), so the admin UI is
-  unstyled in dev. It loads and works; it just looks wrong.
+Every issue this section once tracked as open is now resolved. They are kept
+here because the notes and config lines they explain are still in the tree, and
+because a hang or an unstyled admin in dev will send the next person looking for
+exactly these.
+
+- **emdash-cms/emdash#2626** (closed 2026-09-07, #2937) -- `getBackend()` parked
+  its in-flight init promise on a `globalThis` singleton and never cleared it if
+  the request that started it was cancelled, wedging every later request in the
+  isolate. It now bounds waiters with their own timer, reclaims a stalled init
+  after a deadline, and anchors the init with `after()` so it survives the
+  cancellation. The fix is in 1.x, so it reaches this site only once the upgrade
+  below is done.
+- **cloudflare/workers-sdk#15550** (closed 2026-09-12, #15574) -- Miniflare's
+  writes under `.wrangler/state` triggered Vite hot-update churn on Linux. The
+  `vite.server.watch.ignored` entry in `astro.config.mjs` is that workaround, and
+  its comment still says "needed until" the issue. Wrangler ships the fix now, so
+  the line is a removal candidate -- but drop it only after a cold start and a few
+  edits show no reload churn, since it is also what kept #2626 from being hit.
+- **emdash-cms/emdash#2572** (closed 2026-11-04, not a bug) -- the admin
+  stylesheet 500ing under `astro dev` was the reporter's `react({ include: [...] })`
+  matching the CSS request, so React's transform tried to parse it. This project
+  passes a bare `react()`, so if an unstyled admin shows up here it is a different
+  cause and wants its own investigation.
 - **withastro/astro#17868** -- an unresolvable specifier inside workerd threw an
   uncaught exception, panicked the process, broke the IPC pipe, and corrupted
   Astro's route registry. It surfaced as `Unable to resolve
@@ -43,6 +55,39 @@ admin without a passkey. It is dev-only, so a production build served by
   `astro.config.mjs`; it was removed after two cold starts on the current
   versions showed zero panics, zero reloads, and zero late dep discoveries. Put
   it back only if those reappear.
+
+### Upgrading EmDash
+
+This site pins `emdash` and `@emdash-cms/cloudflare` at `0.36.0`. The current
+release is `1.5.0`, and a dry run on 2026-11-19 put 567 release entries between
+the two. Do not hand-bump the versions:
+
+```bash
+npx upgrade-emdash@latest --dry-run   # shows the plan, changes nothing
+npx upgrade-emdash@latest             # bumps both packages, writes .emdash/UPGRADE.md
+```
+
+The work order at `.emdash/UPGRADE.md` is the thing to read: it carries only the
+changelog entries that cross this project's direct packages, plus the core
+migration delta found after install. `pnpm exec emdash migrate --status` reports
+what is pending; migrations are forward-only, so a D1 backup comes before
+applying any of them to the live database.
+
+Three entries in that range touch this project's own configuration:
+
+- **1.0 removes APIs deprecated during 0.x.** Read
+  [the v1 upgrade guide](https://docs.emdashcms.com/upgrade-to-v1/) before
+  starting; it is written for an upgrade from 0.42, and this site is older.
+- **Subpaths only EmDash loads moved under `emdash/internal/`**, and the D1 and
+  Hyperdrive migration executors moved with them.
+- **`access()` gained `syncName`.** EmDash replaces a user's name with the
+  provider's on every authenticated request; `syncName: false` keeps a name
+  edited in the admin.
+
+`defaultRole: 40` in `astro.config.mjs` is correct and stays. The hover text that
+called role 30 "Editor" was itself the bug -- 30 is Author, 40 is Editor -- so a
+config written against the old text would be the thing to fix, and this one was
+not.
 
 ### Seeding a fresh database
 

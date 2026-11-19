@@ -32,8 +32,8 @@ exactly these.
   the request that started it was cancelled, wedging every later request in the
   isolate. It now bounds waiters with their own timer, reclaims a stalled init
   after a deadline, and anchors the init with `after()` so it survives the
-  cancellation. The fix is in 1.x, so it reaches this site only once the upgrade
-  below is done.
+  cancellation. The fix is in 1.x, so this site has carried it since the 1.5.0
+  upgrade.
 - **cloudflare/workers-sdk#15550** (closed 2026-09-12, #15574) -- Miniflare's
   writes under `.wrangler/state` triggered Vite hot-update churn on Linux. The
   `vite.server.watch.ignored` entry in `astro.config.mjs` is that workaround, and
@@ -58,36 +58,69 @@ exactly these.
 
 ### Upgrading EmDash
 
-This site pins `emdash` and `@emdash-cms/cloudflare` at `0.36.0`. The current
-release is `1.5.0`, and a dry run on 2026-11-19 put 567 release entries between
-the two. Do not hand-bump the versions:
+The site moved from 0.36.0 to 1.5.0 on 2026-11-19. Do not hand-bump the
+versions; `upgrade-emdash` resolves the npm tag, updates every direct EmDash
+package, refreshes the skills in `.agents/skills/`, and writes a work order:
 
 ```bash
 npx upgrade-emdash@latest --dry-run   # shows the plan, changes nothing
-npx upgrade-emdash@latest             # bumps both packages, writes .emdash/UPGRADE.md
+npx upgrade-emdash@latest             # bumps the packages, writes .emdash/UPGRADE.md
 ```
 
-The work order at `.emdash/UPGRADE.md` is the thing to read: it carries only the
+`.emdash/UPGRADE.md` is gitignored and is the thing to read: it carries only the
 changelog entries that cross this project's direct packages, plus the core
-migration delta found after install. `pnpm exec emdash migrate --status` reports
-what is pending; migrations are forward-only, so a D1 backup comes before
-applying any of them to the live database.
+migration delta found after install. The 0.36 to 1.5 run put 567 entries in that
+file, 28 of them carrying a required action, and four naming a surface this site
+touches -- none of which needed a code change here.
 
-Three entries in that range touch this project's own configuration:
+Three things that run caught, worth expecting again:
 
-- **1.0 removes APIs deprecated during 0.x.** Read
-  [the v1 upgrade guide](https://docs.emdashcms.com/upgrade-to-v1/) before
-  starting; it is written for an upgrade from 0.42, and this site is older.
-- **Subpaths only EmDash loads moved under `emdash/internal/`**, and the D1 and
-  Hyperdrive migration executors moved with them.
-- **`access()` gained `syncName`.** EmDash replaces a user's name with the
-  provider's on every authenticated request; `syncName: false` keeps a name
-  edited in the admin.
+- **A transitive pin can break the build.** A fresh install floated
+  `@atcute/repo` ahead of `@atcute/cid`, which the sticky lockfile held back, and
+  `astro check` died on a missing `toLinkBytes` export. `pnpm update --depth
+  Infinity <package>` on the stale half fixes it. Upstream's own lockfile never
+  produces the pair, so this kind of break is ours to resolve, not a bug to
+  report.
+- **The Worker jumps.** See the bundle note under "Checks".
+- **Verification cannot be done anonymously.** While the Access application
+  points at the bare hostname it gates the whole site, so every public URL 302s
+  to the Access login for anyone signed out. That is the private-preview gate
+  described in [docs/auth.md](docs/auth.md), not a broken deploy. Check the site
+  in a browser that holds an Access session.
 
-`defaultRole: 40` in `astro.config.mjs` is correct and stays. The hover text that
-called role 30 "Editor" was itself the bug -- 30 is Author, 40 is Editor -- so a
-config written against the old text would be the thing to fix, and this one was
-not.
+### Running core migrations
+
+Core migrations are forward-only and belong in a serialized step: **build,
+migrate, deploy, check**. An Astro build writes `.emdash/migrations.json`, the
+manifest `emdash migrate` reads, so migrate and deploy must use the same
+artifact -- `pnpm deploy` rebuilds, so run `wrangler deploy` directly after the
+build you migrated against.
+
+```bash
+npx wrangler d1 time-travel info ba78631b-bd76-4be3-9998-a3daa66c3201
+pnpm build
+export CLOUDFLARE_API_TOKEN=...   # scoped token with D1 Edit
+pnpm exec emdash migrate --status --account-id c9d80e4dec35727da326297ef5b88f04 --d1 ba78631b-bd76-4be3-9998-a3daa66c3201
+pnpm exec emdash migrate         --account-id c9d80e4dec35727da326297ef5b88f04 --d1 ba78631b-bd76-4be3-9998-a3daa66c3201
+env -u CLOUDFLARE_API_TOKEN pnpm exec wrangler deploy
+pnpm exec emdash migrate --check --account-id c9d80e4dec35727da326297ef5b88f04 --d1 ba78631b-bd76-4be3-9998-a3daa66c3201
+```
+
+The `--account-id` and `--d1` flags are not optional in practice: the CLI fails
+with "A valid Cloudflare account ID is required for D1 migrations" even though
+`wrangler.jsonc` carries `account_id`. The `env -u` on the deploy is load-bearing
+too -- wrangler prefers `CLOUDFLARE_API_TOKEN` over the `wrangler login` session,
+and a token scoped to D1 Edit cannot touch the Worker service.
+
+The recovery point for D1 is a **Time Travel bookmark**, recorded before
+migrating: 30 days on Workers Paid. EmDash cannot restore its own JSON backups,
+and `wrangler d1 export` refuses this database outright, because a collection
+with search enabled puts FTS5 virtual tables in it.
+
+A Worker in the default `auto` migration mode applies pending migrations itself
+on the first request, but leaves any migration that would process more than
+about 5,000 content rows to the CLI and answers 503 until it is applied. It
+recovers within 30 seconds of the command finishing.
 
 ### Seeding a fresh database
 
@@ -134,8 +167,12 @@ What blocks a merge lives in one object, `POLICY` in `.github/ci/gate.cjs`:
 | bundle    | byte budgets    | worker +250 kB, client +100 kB gzipped, plus the hard limit |
 
 The Worker has a real ceiling: Cloudflare refuses a deploy over **10 MB
-gzipped** on Workers Paid. It currently sits at about 2.9 MB, and the gate fails
-at the limit whatever the delta.
+gzipped** on Workers Paid. It sits at about 5.6 MB since the 1.5.0 upgrade, and
+the gate fails at the limit whatever the delta. That jump from 2.9 MB was the
+upgrade itself, not drift: 1.5 ships a much larger admin, mostly per-locale
+message chunks and a plugin registry of about 1 MB gzipped. The `POLICY` deltas
+were left as they are, so a one-time step change like that fails the bundle
+check and gets merged deliberately rather than quietly raising the budget.
 
 ### Two formatters
 
